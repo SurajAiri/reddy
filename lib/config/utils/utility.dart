@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:reddy/config/utils/enums.dart';
 
 class Utility {
   static String encodeDate(DateTime? value) {
@@ -32,12 +33,16 @@ class Utility {
     }
   }
 
-  String redditSelfTextHtmlIssueFix(String jsonString) {
+  static String redditSelfTextHtmlIssueFix(String jsonString) {
     // Find the index of "selftext_html" and "likes" keys
     int startIndex = jsonString.indexOf('"selftext_html"');
     int endIndex = jsonString.indexOf('"likes"', startIndex);
 
     // Remove the substring between "selftext_html" and "likes" keys
     return jsonString.replaceRange(startIndex, endIndex, '');
+  }
+
+  static String encodeRedditSortType(RedditSortType sort) {
+    return sort.toString().split('.').last.replaceAll("_", "");
   }
 }

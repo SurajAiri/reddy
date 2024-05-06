@@ -25,7 +25,7 @@ class RedditUserModel {
     verified = json['verified'];
     name = json['name'];
     iconImg = json['icon_img'].toString().split('?')[0];
-    print(iconImg);
+    // print(iconImg);
     totalKarma = json['total_karma'];
     isGold = json['is_gold'];
     isMod = json['is_mod'];

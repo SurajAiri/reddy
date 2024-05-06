@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:reddy/config/utils/api_callback_listener.dart';
+import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/models/reddit/reddit_user_model.dart';
 import 'package:reddy/services/reddit_api/reddit_api.dart';
 
 class RedditPostModel {
-  late bool isSelf;
-  late bool isVideo;
+  // late bool isSelf;
+  late PostContentType contentType;
+  // late bool isVideo;
   late bool over18;
   late bool spoiler;
   late int ups;
@@ -23,14 +25,23 @@ class RedditPostModel {
   bool isNSFW = false;
   String? postHint;
   bool quarantine = false;
-  List<RedditImage> images = [];
+  List<RedditImage> previews = [];
   RedditVideo? video;
   RedditUserModel? user;
+  double get aspectRatio {
+    if (video != null) {
+      return video!.aspectRatio;
+    } else if (previews.isNotEmpty) {
+      return previews[0].width / previews[0].height;
+    } else if (thumbnail.width == 0 || thumbnail.height == 0) {
+      return 0.35;
+    }
+    return thumbnail.width / thumbnail.height;
+  }
 
   RedditPostModel({
     required this.id,
-    required this.isSelf,
-    required this.isVideo,
+    required this.contentType,
     required this.title,
     required this.selftext,
     required this.ups,
@@ -46,54 +57,86 @@ class RedditPostModel {
     required this.domain,
     required this.thumbnail,
     this.postHint,
-    this.images = const [],
+    this.previews = const [],
     this.video,
     this.user,
   });
 
   RedditPostModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    isSelf = json['is_self'];
-    isVideo = json['is_video'];
-    title = json['title'];
-    selftext = json['selftext'];
-    ups = json['ups'];
-    downs = json['downs'];
-    permalink = json['permalink'];
-    author = json['author'];
-    subreddit = json['subreddit'];
-    over18 = json['over_18'];
-    spoiler = json['spoiler'];
-    quarantine = json['quarantine'];
+    try {
+      id = json['id'];
+      title = json['title'];
+      selftext = json['selftext'];
+      ups = json['ups'];
+      downs = json['downs'];
+      permalink = json['permalink'];
+      author = json['author'];
+      subreddit = json['subreddit'];
+      over18 = json['over_18'];
+      spoiler = json['spoiler'];
+      quarantine = json['quarantine'];
 
-    // debugPrint('post: https://reddit.com${json['permalink']} ');
-    created =
-        DateTime.fromMillisecondsSinceEpoch(json['created_utc'].toInt() * 1000);
-    url = json["url_overridden_by_dest"] ?? json['url'];
-    domain = json['domain'];
-    thumbnail = RedditImage(
-      url: json['thumbnail'],
-      height: json['thumbnail_height'] ?? 0,
-      width: json['thumbnail_width'] ?? 0,
-    );
-    postHint = json['post_hint'] ?? "self";
-    images = _parseImages(json);
-    video = _parseVideo(json);
-    isNSFW = _isNsfwContent(json);
-    updateUserDetails();
+      // debugPrint('post: https://reddit.com${json['permalink']} ');
+      created = DateTime.fromMillisecondsSinceEpoch(
+          json['created_utc'].toInt() * 1000);
+      url = json["url_overridden_by_dest"] ?? json['url'];
+      domain = json['domain'];
+      thumbnail = RedditImage(
+        url: json['thumbnail'],
+        height: json['thumbnail_height'] ?? 0,
+        width: json['thumbnail_width'] ?? 0,
+      );
+      postHint = json['post_hint'] ?? "self";
+      isNSFW = _isNsfwContent(json);
+      video = _parseVideo(json);
+      if (json['is_self']) {
+        contentType = PostContentType.text;
+      } else if (json['is_video']) {
+        contentType = PostContentType.video;
+      } else if (url.endsWith('.gifv') || video != null) {
+        contentType = PostContentType.gifv;
+      } else if (url.endsWith('.gif')) {
+        contentType = PostContentType.gif;
+      } else {
+        contentType = PostContentType.image;
+      }
+      print(contentType);
+
+      previews = contentType == PostContentType.gif
+          ? _parseGifPreviews(json)
+          : _parseImagePreviews(json);
+      updateUserDetails();
+    } catch (e) {
+      debugPrint('error: $e | $contentType');
+    }
   }
-  List<RedditImage> _parseImages(json) {
+
+  List<RedditImage> _parseGifPreviews(json) {
+    // data.children[4].data.preview.images[0].variants.gif
+    if (json['preview'] == null ||
+        json['preview']['images'] == null ||
+        json['preview']['images'][0]['variants'] == null) {
+      return [];
+    }
     List<RedditImage> res = [];
+    json['preview']['images'][0]['variants']['gif']['resolutions'].forEach((v) {
+      res.add(RedditImage.fromJson(v));
+    });
+
+    return res;
+  }
+
+  List<RedditImage> _parseImagePreviews(json) {
     if (json['preview'] == null ||
         json['preview']['images'] == null ||
         json['preview']['images'].length < 1 ||
         json['preview']['images'][0]['resolutions'] == null) {
       return [];
     }
+    List<RedditImage> res = [];
     json['preview']['images'][0]['resolutions'].forEach((v) {
       res.add(RedditImage.fromJson(v));
     });
-    print(res[0].url);
     return res;
   }
 
@@ -110,17 +153,22 @@ class RedditPostModel {
 
   RedditVideo? _parseVideo(json) {
     if (json['media'] == null || json['media']['reddit_video'] == null) {
-      return null;
+      // return null;
+      if (json['preview'] == null ||
+          json['preview']['reddit_video_preview'] == null) {
+        return null;
+      }
+      return RedditVideo.fromJson(json['preview']['reddit_video_preview']);
     }
     return RedditVideo.fromJson(json['media']['reddit_video']);
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    debugPrint('post: https://reddit.com${data['permalink']} ');
+    // debugPrint('post: https://reddit.com${data['permalink']} ');
     data['id'] = id;
-    data['is_self'] = isSelf;
-    data['is_video'] = isVideo;
+    data['is_self'] = contentType == PostContentType.text;
+    data['is_video'] = contentType == PostContentType.video;
     data['title'] = title;
     data['selftext'] = selftext;
     data['ups'] = ups;
@@ -137,7 +185,7 @@ class RedditPostModel {
 
     data['thumbnail'] = thumbnail.toJson();
     data['post_hint'] = postHint;
-    data['images'] = images.map((v) => v.toJson()).toList();
+    data['images'] = previews.map((v) => v.toJson()).toList();
 
     if (video != null) {
       data['video'] = video!.toJson();
@@ -152,7 +200,6 @@ class RedditPostModel {
       listener: const ApiCallListener(),
     );
     if (res != null) {
-      print("user: ${res.name}");
       user = res;
     }
   }
@@ -222,7 +269,6 @@ class RedditVideo {
     return data;
   }
 }
-
 
 // {
 //   "id":"",

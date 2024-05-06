@@ -13,7 +13,6 @@ import 'package:reddy/config/utils/ui_utility.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
 import 'package:reddy/views/features/player/widgets/hls_video_player.dart';
-import 'package:reddy/views/features/posts/screens/post_detail_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostField extends StatelessWidget {
@@ -23,11 +22,15 @@ class PostField extends StatelessWidget {
     this.safeContentOnly = true,
     this.isSinglePost = false,
     this.imageQuality = ImageQuality.medium,
+    this.postUrlPressed,
   });
   final RedditPostModel post;
   final bool safeContentOnly;
   final bool isSinglePost;
   final ImageQuality imageQuality;
+
+  /// called when there is no media to show but PostContentType is not text
+  final Function()? postUrlPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -98,13 +101,14 @@ class PostField extends StatelessWidget {
                 ),
               ],
             ),
-            // Text(
-            //   "nsfw ${post.isNSFW} | over18 ${post.over18} | spoiler ${post.spoiler} | quran: ${post.quarantine}",
-            //   style: TextStyle(
-            //     fontSize: 12,
-            //     color: Colors.grey,
-            //   ),
-            // ),
+            Text(
+              "content: ${post.id}",
+              // "nsfw ${post.isNSFW} | over18 ${post.over18} | spoiler ${post.spoiler} | quran: ${post.quarantine}",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
             const SizedBox(height: 4),
             const Divider(),
             const SizedBox(height: 4),
@@ -116,14 +120,21 @@ class PostField extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
-            // if (post.isVideo)
-            //   buildVideoPlayer()
-            // // else if (post.thumbnail.url != "")
-            // //   Image.network(post.thumbnail.url)
-            // else
-            if (post.images.isNotEmpty)
+            if (post.isNSFW && safeContentOnly)
+              _buildImgNotShow(MediaQuery.of(context).size.width)
+            else if (post.video == null &&
+                post.previews.isEmpty &&
+                post.contentType != PostContentType.text)
+              TextButton(
+                onPressed: postUrlPressed,
+                child: Text(post.url),
+              )
+            else if (post.contentType == PostContentType.video ||
+                post.contentType == PostContentType.gifv)
+              buildVideoPlayer()
+            else if (post.previews.isNotEmpty)
               buildImagePart(context)
-            else if (post.isSelf)
+            else if (post.contentType == PostContentType.text)
               Text(
                 post.selftext,
                 style: TextStyle(
@@ -170,14 +181,11 @@ class PostField extends StatelessWidget {
   }
 
   String _getImagePostUrl() {
-    print(imageQuality);
     if (imageQuality == ImageQuality.highest) return post.url;
 
-    int ind =
-        min(ImageQuality.values.indexOf(imageQuality), post.images.length - 1);
-    print(ind);
-    print(post.images[ind].url);
-    return post.images[ind].url;
+    int ind = min(
+        ImageQuality.values.indexOf(imageQuality), post.previews.length - 1);
+    return post.previews[ind].url;
   }
 
   Widget buildImagePart(BuildContext context) {
@@ -199,8 +207,17 @@ class PostField extends StatelessWidget {
                 if (loadingProgress == null) {
                   return child;
                 }
-                return const Center(
-                  child: CircularProgressIndicator(),
+                return SizedBox(
+                  width: double.maxFinite,
+                  height: width * post.thumbnail.height / post.thumbnail.width,
+                  child: Center(
+                    child: LinearProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
                 );
               },
               errorBuilder: (context, error, stackTrace) =>
@@ -213,7 +230,7 @@ class PostField extends StatelessWidget {
     return Container(
       color: Colors.red,
       width: double.maxFinite,
-      height: width * post.thumbnail.height / post.thumbnail.width,
+      height: width * post.aspectRatio,
       child: Center(
         child: Text(
           post.isNSFW ? "NSFW Content" : "Error loading image",
@@ -227,7 +244,19 @@ class PostField extends StatelessWidget {
   }
 
   Widget buildVideoPlayer() {
-    return HlsVideoPlayer(video: post.video!);
+    return GetBuilder<SettingsController>(
+      builder: (controller) => HlsVideoPlayer(
+        postId: post.id,
+        video: post.video!,
+        thumbnailUrl: post.thumbnail.url,
+        autoPlay: controller.autoPlay.value,
+        mute: controller.isMuted.value,
+        playbackSpeed: controller.playbackSpeed.value,
+        onMuteChange: (isMute) => controller.isMuted.value = isMute,
+        onPlaybackSpeedChange: (speed) =>
+            controller.playbackSpeed.value = speed,
+      ),
+    );
   }
 }
 

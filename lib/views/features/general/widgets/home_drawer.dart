@@ -46,7 +46,7 @@ class HomeDrawer extends StatelessWidget {
                       radius: 50,
                       backgroundColor: Colors.red[100],
                       child: Image.asset(
-                        AssetPaths.logo,
+                        AssetPaths.img.logo,
                         height: 80,
                         fit: BoxFit.contain,
                       ),
