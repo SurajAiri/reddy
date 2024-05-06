@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:reddy/config/utils/constants.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class HlsVideoPlayer extends StatefulWidget {
   const HlsVideoPlayer({
@@ -37,7 +38,7 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
   void initState() {
     super.initState();
     var postId = Get.find<SettingsController>().focusPostId.value;
-    bool autoPlay = (postId == null || postId == "") && widget.autoPlay;
+    // bool autoPlay = (postId == null || postId == "") && widget.autoPlay;
     controller = BetterPlayerController(
       BetterPlayerConfiguration(
         aspectRatio: widget.video.aspectRatio,
@@ -98,10 +99,19 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: widget.video.aspectRatio,
-      child: BetterPlayer(
-        controller: controller,
+    return VisibilityDetector(
+      key: Key(widget.postId),
+      onVisibilityChanged: (visibilityInfo) {
+        if (visibilityInfo.visibleFraction == 1) {
+          Get.find<SettingsController>().focusPostId.value = widget.postId;
+          // print("visible ${widget.postId}");
+        }
+      },
+      child: AspectRatio(
+        aspectRatio: widget.video.aspectRatio,
+        child: BetterPlayer(
+          controller: controller,
+        ),
       ),
     );
   }

@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/route_manager.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:reddy/config/routes/routes.dart';
-import 'package:reddy/views/features/general/screens/home_screen.dart';
-import 'package:reddy/views/test/test_player_screen.dart';
-import 'package:reddy/views/test/test_screen.dart';
+import 'package:reddy/config/utils/constants.dart';
 
 import 'controllers/general/settings_controller.dart';
+import 'models/history/reddit_history_model.dart';
 
-void main() {
+void main() async {
   Get.lazyPut(() => SettingsController());
+  // init hive
+  await Hive.initFlutter();
+  // register adapters for reddit history
+  Hive.registerAdapter(RedditHistoryModelAdapter());
+
+  // open hive boxes
+  await Hive.openBox<RedditHistoryModel>(kHistoryBoxHiveBox);
+
   runApp(const ReddyApp());
 }
 

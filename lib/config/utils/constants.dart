@@ -12,3 +12,8 @@ const kPagePadding = EdgeInsets.all(16.0);
 // colors
 const kLabelColor = Colors.black54;
 const kPrimaryColor = Colors.green;
+
+const kMaxFavHistoryLimit = 50;
+
+// hive box names
+const kHistoryBoxHiveBox = "reddit_history_hive_box";

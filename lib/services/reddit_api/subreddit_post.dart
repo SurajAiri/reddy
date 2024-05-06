@@ -48,7 +48,7 @@ Future<bool> _checkIfSubredditExist(String subreddit) async {
   try {
     http.Response response = await http.get(Uri.parse(url));
     var json = jsonDecode(response.body);
-    if (json['site_rules'] != null) {
+    if (json['rules'] != null) {
       result = true;
     } else {
       result = false;

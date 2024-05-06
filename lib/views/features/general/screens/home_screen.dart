@@ -65,21 +65,12 @@ class HomeScreen extends GetView<HomeController> {
               : ListView.builder(
                   itemBuilder: (context, index) {
                     if (index < controller.posts.value!.posts.length) {
-                      return VisibilityDetector(
-                        key: Key(index.toString()),
-                        onVisibilityChanged: (visibilityInfo) {
-                          if (visibilityInfo.visibleFraction == 1) {
-                            controller.settings.focusPostId.value =
-                                controller.posts.value!.posts[index].id;
-                          }
-                        },
-                        child: PostField(
-                          post: controller.posts.value!.posts[index],
-                          safeContentOnly: controller.isSafeContentOnly.value,
-                          imageQuality: controller.imageQuality.value,
-                          postUrlPressed: () => controller.postLinkClicked(
-                              controller.posts.value!.posts[index].url),
-                        ),
+                      return PostField(
+                        post: controller.posts.value!.posts[index],
+                        safeContentOnly: controller.isSafeContentOnly.value,
+                        imageQuality: controller.imageQuality.value,
+                        postUrlPressed: () => controller.postLinkClicked(
+                            controller.posts.value!.posts[index].url),
                       );
                     }
 
