@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:get/route_manager.dart';
-import 'package:meme_life_v2/controllers/general/settings_controller.dart';
-import 'package:meme_life_v2/models/reddit/reddit_post_model.dart';
-import 'package:meme_life_v2/services/reddit_api/reddit_api.dart';
-import 'package:meme_life_v2/views/features/general/widgets/post_field.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
+import 'package:reddy/models/reddit/reddit_post_model.dart';
+import 'package:reddy/services/reddit_api/reddit_api.dart';
+import 'package:reddy/views/features/general/widgets/post_field.dart';
 
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});

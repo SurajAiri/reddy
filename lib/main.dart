@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/route_manager.dart';
-import 'package:meme_life_v2/config/routes/routes.dart';
-import 'package:meme_life_v2/views/features/general/screens/home_screen.dart';
-import 'package:meme_life_v2/views/test/test_player_screen.dart';
-import 'package:meme_life_v2/views/test/test_screen.dart';
+import 'package:reddy/config/routes/routes.dart';
+import 'package:reddy/views/features/general/screens/home_screen.dart';
+import 'package:reddy/views/test/test_player_screen.dart';
+import 'package:reddy/views/test/test_screen.dart';
 
 import 'controllers/general/settings_controller.dart';
 

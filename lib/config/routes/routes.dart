@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:meme_life_v2/controllers/general/home_controller.dart';
-import 'package:meme_life_v2/controllers/general/settings_controller.dart';
-import 'package:meme_life_v2/views/features/general/screens/settings_screen.dart';
+import 'package:reddy/controllers/general/home_controller.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
+import 'package:reddy/views/features/general/screens/settings_screen.dart';
 
 import '../../views/features/general/screens/home_screen.dart';
 

@@ -6,14 +6,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:meme_life_v2/config/routes/routes.dart';
-import 'package:meme_life_v2/config/utils/constants.dart';
-import 'package:meme_life_v2/config/utils/enums.dart';
-import 'package:meme_life_v2/config/utils/ui_utility.dart';
-import 'package:meme_life_v2/controllers/general/settings_controller.dart';
-import 'package:meme_life_v2/models/reddit/reddit_post_model.dart';
-import 'package:meme_life_v2/views/features/player/widgets/hls_video_player.dart';
-import 'package:meme_life_v2/views/features/posts/screens/post_detail_screen.dart';
+import 'package:reddy/config/routes/routes.dart';
+import 'package:reddy/config/utils/constants.dart';
+import 'package:reddy/config/utils/enums.dart';
+import 'package:reddy/config/utils/ui_utility.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
+import 'package:reddy/models/reddit/reddit_post_model.dart';
+import 'package:reddy/views/features/player/widgets/hls_video_player.dart';
+import 'package:reddy/views/features/posts/screens/post_detail_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostField extends StatelessWidget {

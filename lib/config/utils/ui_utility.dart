@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:meme_life_v2/config/utils/constants.dart';
+import 'package:reddy/config/utils/constants.dart';
 
 class UiUtility {
   static void showToast(String msg, {bool isError = false}) {

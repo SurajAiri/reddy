@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meme_life_v2/models/reddit/reddit_post_model.dart';
-import 'package:meme_life_v2/views/features/general/widgets/post_field.dart';
-import 'package:meme_life_v2/views/widgets/screen_layout.dart';
+import 'package:reddy/models/reddit/reddit_post_model.dart';
+import 'package:reddy/views/features/general/widgets/post_field.dart';
+import 'package:reddy/views/widgets/screen_layout.dart';
 
 class SinglePostScreen extends StatelessWidget {
   const SinglePostScreen({super.key, required this.post});

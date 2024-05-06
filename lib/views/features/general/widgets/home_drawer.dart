@@ -2,11 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:meme_life_v2/config/routes/routes.dart';
-import 'package:meme_life_v2/config/utils/asset_paths.dart';
-import 'package:meme_life_v2/config/utils/constants.dart';
-import 'package:meme_life_v2/config/utils/ui_utility.dart';
-import 'package:meme_life_v2/views/features/general/widgets/drawer_element.dart';
+import 'package:reddy/config/routes/routes.dart';
+import 'package:reddy/config/utils/asset_paths.dart';
+import 'package:reddy/config/utils/constants.dart';
+import 'package:reddy/config/utils/ui_utility.dart';
+import 'package:reddy/views/features/general/widgets/drawer_element.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeDrawer extends StatelessWidget {

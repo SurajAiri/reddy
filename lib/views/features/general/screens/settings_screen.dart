@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:meme_life_v2/controllers/general/settings_controller.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meme_life_v2/config/utils/api_callback_listener.dart';
-import 'package:meme_life_v2/models/reddit/reddit_user_model.dart';
-import 'package:meme_life_v2/services/reddit_api/reddit_api.dart';
+import 'package:reddy/config/utils/api_callback_listener.dart';
+import 'package:reddy/models/reddit/reddit_user_model.dart';
+import 'package:reddy/services/reddit_api/reddit_api.dart';
 
 class RedditPostModel {
   late bool isSelf;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:meme_life_v2/config/utils/enums.dart';
-import 'package:meme_life_v2/controllers/general/settings_controller.dart';
-import 'package:meme_life_v2/services/reddit_api/reddit_api.dart';
+import 'package:reddy/config/utils/enums.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
+import 'package:reddy/services/reddit_api/reddit_api.dart';
 
 import '../../models/reddit/reddit_post_model.dart';
 

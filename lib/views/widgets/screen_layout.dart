@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:meme_life_v2/config/utils/constants.dart';
+import 'package:reddy/config/utils/constants.dart';
 
 class ScreenLayout extends StatelessWidget {
   const ScreenLayout({

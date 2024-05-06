@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
-import 'package:meme_life_v2/config/utils/asset_paths.dart';
-import 'package:meme_life_v2/config/utils/enums.dart';
-import 'package:meme_life_v2/controllers/general/home_controller.dart';
-import 'package:meme_life_v2/views/features/general/widgets/post_field.dart';
+import 'package:reddy/config/utils/asset_paths.dart';
+import 'package:reddy/config/utils/enums.dart';
+import 'package:reddy/controllers/general/home_controller.dart';
+import 'package:reddy/views/features/general/widgets/post_field.dart';
 import '../widgets/home_drawer.dart';
 
 class HomeScreen extends GetView<HomeController> {

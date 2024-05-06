@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:meme_life_v2/config/utils/api_callback_handler.dart';
-import 'package:meme_life_v2/config/utils/api_callback_listener.dart';
-import 'package:meme_life_v2/models/reddit/reddit_post_model.dart';
+import 'package:reddy/config/utils/api_callback_handler.dart';
+import 'package:reddy/config/utils/api_callback_listener.dart';
+import 'package:reddy/models/reddit/reddit_post_model.dart';
 import 'package:http/http.dart' as http;
-import 'package:meme_life_v2/models/reddit/reddit_user_model.dart';
+import 'package:reddy/models/reddit/reddit_user_model.dart';
 
 import 'reddit_endpoints.dart';
 

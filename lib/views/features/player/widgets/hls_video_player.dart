@@ -1,7 +1,7 @@
 // hls video player
 import 'package:better_player/better_player.dart';
 import 'package:flutter/material.dart';
-import 'package:meme_life_v2/models/reddit/reddit_post_model.dart';
+import 'package:reddy/models/reddit/reddit_post_model.dart';
 
 class HlsVideoPlayer extends StatefulWidget {
   const HlsVideoPlayer({
