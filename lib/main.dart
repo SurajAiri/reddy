@@ -20,7 +20,7 @@ class ReddyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       getPages: AllRoutes.routes,
-      home: TestScreen(),
+      // home: TestScreen(),
       initialRoute: AllRoutes.homeScreen,
       theme: ThemeData.light().copyWith(
         scaffoldBackgroundColor: Colors.grey[50],

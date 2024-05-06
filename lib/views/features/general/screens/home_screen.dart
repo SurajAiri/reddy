@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:reddy/config/routes/routes.dart';
 import 'package:reddy/config/utils/asset_paths.dart';
 import 'package:reddy/controllers/general/home_controller.dart';
@@ -48,23 +47,23 @@ class HomeScreen extends GetView<HomeController> {
             },
             icon: const Icon(Icons.search),
           ),
-          IconButton(
-            onPressed: () {
-              controller.fetchPosts();
-            },
-            icon: Icon(Icons.replay_outlined),
-          ),
-          Obx(
-            () => IconButton(
-              onPressed: () {
-                controller.settings.isSafeContentOnly.value =
-                    !controller.settings.isSafeContentOnly.value;
-              },
-              icon: Icon(controller.settings.isSafeContentOnly.value
-                  ? Icons.no_accounts
-                  : Icons.safety_check),
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {
+          //     controller.fetchPosts();
+          //   },
+          //   icon: const Icon(Icons.replay_outlined),
+          // ),
+          // Obx(
+          //   () => IconButton(
+          //     onPressed: () {
+          //       controller.settings.isSafeContentOnly.value =
+          //           !controller.settings.isSafeContentOnly.value;
+          //     },
+          //     icon: Icon(controller.settings.isSafeContentOnly.value
+          //         ? Icons.no_accounts
+          //         : Icons.safety_check),
+          //   ),
+          // ),
         ],
       ),
       body: SafeArea(
@@ -73,37 +72,42 @@ class HomeScreen extends GetView<HomeController> {
               ? Center(
                   child: RedLottieAnim(path: AssetPaths.lottie.loading),
                 )
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          return PostField(
-                            post: controller.posts.value!.posts[index],
-                            safeContentOnly: controller.isSafeContentOnly.value,
-                            imageQuality: controller.imageQuality.value,
-                            postUrlPressed: () => controller.postLinkClicked(
-                                controller.posts.value!.posts[index].url),
-                          );
+              : ListView.builder(
+                  itemBuilder: (context, index) {
+                    if (index < controller.posts.value!.posts.length) {
+                      return VisibilityDetector(
+                        key: Key(index.toString()),
+                        onVisibilityChanged: (visibilityInfo) {
+                          if (visibilityInfo.visibleFraction == 1) {
+                            controller.settings.focusPostId.value =
+                                controller.posts.value!.posts[index].id;
+                          }
                         },
-                        itemCount: controller.posts.value?.posts.length ?? 0,
-                      ),
-                      TextButton(
+                        child: PostField(
+                          post: controller.posts.value!.posts[index],
+                          safeContentOnly: controller.isSafeContentOnly.value,
+                          imageQuality: controller.imageQuality.value,
+                          postUrlPressed: () => controller.postLinkClicked(
+                              controller.posts.value!.posts[index].url),
+                        ),
+                      );
+                    }
+
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
                         onPressed: controller.nextPage,
                         child: const Text("Load More..."),
                       ),
-                    ],
-                  ),
+                    );
+                  },
+                  itemCount: controller.postCount.value,
                 ),
         ),
       ),
       drawer: const HomeDrawer(),
       floatingActionButton: Obx(
         () => controller.settings.isPremium.value
-            // () => true
             ? FloatingActionButton(
                 onPressed: controller.floatingButtonAction,
                 backgroundColor: Colors.red[300],

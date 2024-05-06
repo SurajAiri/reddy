@@ -56,6 +56,7 @@ class PostField extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -68,6 +69,7 @@ class PostField extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -101,14 +103,15 @@ class PostField extends StatelessWidget {
                 ),
               ],
             ),
-            Text(
-              "content: ${post.id}",
-              // "nsfw ${post.isNSFW} | over18 ${post.over18} | spoiler ${post.spoiler} | quran: ${post.quarantine}",
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
+            // Text(
+            //   "content: ${post.id}",
+            //   // "nsfw ${post.isNSFW} | over18 ${post.over18} | spoiler ${post.spoiler} | quran: ${post.quarantine}",
+            //   style: TextStyle(
+            //     fontSize: 12,
+            //     color: Colors.grey,
+            //   ),
+            // ),
+
             const SizedBox(height: 4),
             const Divider(),
             const SizedBox(height: 4),
@@ -129,8 +132,9 @@ class PostField extends StatelessWidget {
                 onPressed: postUrlPressed,
                 child: Text(post.url),
               )
-            else if (post.contentType == PostContentType.video ||
-                post.contentType == PostContentType.gifv)
+            else if ((post.contentType == PostContentType.video ||
+                    post.contentType == PostContentType.gifv) &&
+                post.video != null)
               buildVideoPlayer()
             else if (post.previews.isNotEmpty)
               buildImagePart(context)
@@ -180,36 +184,37 @@ class PostField extends StatelessWidget {
     );
   }
 
-  String _getImagePostUrl() {
-    if (imageQuality == ImageQuality.highest) return post.url;
+  RedditImage _getImagePostUrl() {
+    if (imageQuality == ImageQuality.highest) return post.previews.last;
 
     int ind = min(
         ImageQuality.values.indexOf(imageQuality), post.previews.length - 1);
-    return post.previews[ind].url;
+    return post.previews[ind];
   }
 
   Widget buildImagePart(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
-    // print(width);
-    // String url = post.url;
-    String url = _getImagePostUrl();
-    // print("$url");
+    RedditImage img = _getImagePostUrl();
+    // double height = width * post.thumbnail.height / post.thumbnail.width;
+// height using aspect ratio
+    double height = width * img.height / img.width;
+    print("width: $width,  height: $height, url: ${img.url}");
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: post.isNSFW && safeContentOnly
           ? _buildImgNotShow(width)
           : Image.network(
-              url,
-              width: double.maxFinite,
-              height: width * post.thumbnail.height / post.thumbnail.width,
+              img.url,
+              width: width,
+              height: height,
               fit: BoxFit.fill,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) {
                   return child;
                 }
                 return SizedBox(
-                  width: double.maxFinite,
-                  height: width * post.thumbnail.height / post.thumbnail.width,
+                  width: width,
+                  height: height,
                   child: Center(
                     child: LinearProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
@@ -244,15 +249,16 @@ class PostField extends StatelessWidget {
   }
 
   Widget buildVideoPlayer() {
+    print("video player");
     return GetBuilder<SettingsController>(
       builder: (controller) => HlsVideoPlayer(
         postId: post.id,
         video: post.video!,
         thumbnailUrl: post.thumbnail.url,
         autoPlay: controller.autoPlay.value,
-        mute: controller.isMuted.value,
+        mute: !controller.sound.value,
         playbackSpeed: controller.playbackSpeed.value,
-        onMuteChange: (isMute) => controller.isMuted.value = isMute,
+        onMuteChange: (isMute) => controller.sound.value = !isMute,
         onPlaybackSpeedChange: (speed) =>
             controller.playbackSpeed.value = speed,
       ),

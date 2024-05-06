@@ -18,21 +18,6 @@ class Utility {
     return DateFormat('hh : mm a').format(d);
   }
 
-  static String encodeImageSize(int bytes) {
-    if (bytes < 1024) {
-      return '$bytes bytes';
-    } else if (bytes < 1024 * 1024) {
-      double kb = bytes / 1024;
-      return '${kb.toStringAsFixed(2)} KB';
-    } else if (bytes < 1024 * 1024 * 1024) {
-      double mb = bytes / (1024 * 1024);
-      return '${mb.toStringAsFixed(2)} MB';
-    } else {
-      double gb = bytes / (1024 * 1024 * 1024);
-      return '${gb.toStringAsFixed(2)} GB';
-    }
-  }
-
   static String redditSelfTextHtmlIssueFix(String jsonString) {
     // Find the index of "selftext_html" and "likes" keys
     int startIndex = jsonString.indexOf('"selftext_html"');
@@ -44,5 +29,17 @@ class Utility {
 
   static String encodeRedditSortType(RedditSortType sort) {
     return sort.toString().split('.').last.replaceAll("_", "");
+  }
+
+  static String encodeImageQuality(ImageQuality quality) {
+    return switch (quality) {
+      ImageQuality.lowest => "Lowest",
+      ImageQuality.low => "Low",
+      ImageQuality.mediumLow => "Medium Low",
+      ImageQuality.medium => "Medium",
+      ImageQuality.mediumHigh => "Medium High",
+      ImageQuality.high => "High",
+      ImageQuality.highest => "Highest",
+    };
   }
 }

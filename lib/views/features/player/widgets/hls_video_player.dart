@@ -41,8 +41,8 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
     controller = BetterPlayerController(
       BetterPlayerConfiguration(
         aspectRatio: widget.video.aspectRatio,
-        autoPlay: autoPlay,
-        // autoPlay: false,
+        // autoPlay: autoPlay,
+        autoPlay: false,
         showPlaceholderUntilPlay: false,
         placeholder: Image.network(
           widget.thumbnailUrl,

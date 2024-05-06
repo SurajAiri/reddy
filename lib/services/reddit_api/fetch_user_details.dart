@@ -15,7 +15,7 @@ Future<RedditUserModel?> _fetchUserDetails({
 
     return RedditUserModel.fromJson(data['data']);
   } catch (e) {
-    debugPrint("error: $e");
+    debugPrint("reddit user error: $e");
   }
   return null;
 }

@@ -8,10 +8,14 @@ class SearchField extends StatelessWidget {
     this.onEditingComplete,
     this.enabled = true,
     this.focusNode,
+    this.suffixIcon,
+    this.prefixIcon,
   });
   final String hintText;
   final TextEditingController? controller;
   final Function()? onEditingComplete;
+  final Widget? suffixIcon;
+  final Widget? prefixIcon;
   final bool enabled;
   final FocusNode? focusNode;
 
@@ -45,11 +49,8 @@ class SearchField extends StatelessWidget {
             borderSide: BorderSide.none,
             borderRadius: BorderRadius.circular(6),
           ),
-          // suffixIcon: IconButton(
-          //   icon: const Icon(Icons.mic),
-          //   onPressed: () {},
-          // ),
-          prefixIcon: Icon(Icons.search),
+          suffixIcon: suffixIcon,
+          prefixIcon: prefixIcon,
         ),
       ),
     );

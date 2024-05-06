@@ -43,6 +43,8 @@ Future<bool> _checkIfSubredditExist(String subreddit) async {
 
   String url =
       'https://www.reddit.com/r/$subreddit/about/rules.json?raw_json=1';
+
+  print("validation url: $url");
   try {
     http.Response response = await http.get(Uri.parse(url));
     var json = jsonDecode(response.body);

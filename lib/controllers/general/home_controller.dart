@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/get_rx.dart';
 import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/config/utils/ui_utility.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
@@ -16,10 +17,14 @@ class HomeController extends GetxController {
   Rx<ImageQuality> get imageQuality => settings.imageQuality;
   Rx<bool> get isSafeContentOnly => settings.isSafeContentOnly;
   // RxList<RedditPostModel> posts = RxList();
-  Rxn<RedditPostResponse> posts = Rxn<RedditPostResponse>();
-
-  String? before;
-  String? after;
+  Rxn<RedditPostResponse> posts =
+      Rxn<RedditPostResponse>(RedditPostResponse(subreddit: "namflashbacks"));
+  RxInt get postCount => (posts.value == null
+          ? 0
+          : posts.value!.after == null
+              ? posts.value!.posts.length
+              : posts.value!.posts.length + 1)
+      .obs;
 
   @override
   void onInit() {
@@ -35,7 +40,7 @@ class HomeController extends GetxController {
 
   void nextPage() {
     if (posts.value?.after != null) {
-      fetchPosts();
+      fetchPosts(direction: 1);
     }
   }
 
@@ -46,7 +51,11 @@ class HomeController extends GetxController {
     // print(posts.length);
   }
 
-  void fetchPosts({String? subreddit}) async {
+  /// `direction` -1 for previous, 1 for next, 0 for reload
+  void fetchPosts({
+    String? subreddit,
+    int direction = 0,
+  }) async {
     if (subreddit != posts.value?.subreddit && subreddit != null) {
       posts.value = RedditPostResponse(subreddit: subreddit);
     }
@@ -55,7 +64,8 @@ class HomeController extends GetxController {
     // Fetch posts
     posts.value = await RedditApi.fetchSubredditPosts(
       subreddit: posts.value?.subreddit ?? 'memes',
-      after: posts.value?.after,
+      after: direction == 1 ? posts.value?.after : null,
+      before: direction == -1 ? posts.value?.before : null,
       sortType: RedditSortType.new_,
     );
     // tempFilter();
@@ -83,10 +93,9 @@ class HomeController extends GetxController {
 
   void floatingButtonAction() async {
     // print('Floating button pressed');
-    // updateSubreddit('memes');
-    // settings.isSafeContentOnly.value = false;
-    // updateSubreddit('funny');
+    updateSubreddit('memes');
+    settings.isSafeContentOnly.value = true;
     // nextPage();
-    settings.imageQuality.value = ImageQuality.mediumHigh;
+    // settings.imageQuality.value = ImageQuality.mediumHigh;
   }
 }

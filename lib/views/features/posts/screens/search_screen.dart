@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:reddy/config/utils/asset_paths.dart';
 import 'package:reddy/controllers/post/reddit_search_controller.dart';
 import 'package:reddy/views/widgets/red_lottie_anim.dart';
@@ -19,6 +22,16 @@ class SearchScreen extends GetView<RedditSearchController> {
             controller: controller.searchController,
             onEditingComplete: controller.validateSearch,
             enabled: !controller.isValidating.value,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.health_and_safety_outlined),
+              onPressed: () {},
+            ),
+            prefixIcon: IconButton(
+              onPressed: () {
+                print("Icons.reddit");
+              },
+              icon: const Icon(Icons.reddit),
+            ),
           ),
         ),
         actions: [
@@ -55,8 +68,62 @@ class SearchScreen extends GetView<RedditSearchController> {
                   ],
                 ),
               ))
-            : const SizedBox(),
+            : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildSfwSuggestionsPart(),
+                  ],
+                ),
+              ),
       ),
+    );
+  }
+
+  ListView _buildSfwSuggestionsPart() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        String subreddit = controller.suggestions.toList()[index];
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: GestureDetector(
+            onTap: () => controller.onSuggestionsTap(subreddit),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.search,
+                    color: Colors.black38,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      subreddit,
+                      style: const TextStyle(
+                        color: Colors.black38,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    onTap: () {
+                      controller.searchController.text = subreddit;
+                    },
+                    child: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.black38,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      itemCount: controller.suggestions.length,
     );
   }
 }
