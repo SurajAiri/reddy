@@ -18,7 +18,7 @@ class HomeController extends GetxController {
   Rx<bool> get isSafeContentOnly => settings.isSafeContentOnly;
   // RxList<RedditPostModel> posts = RxList();
   Rxn<RedditPostResponse> posts =
-      Rxn<RedditPostResponse>(RedditPostResponse(subreddit: "namflashbacks"));
+      Rxn<RedditPostResponse>(RedditPostResponse(subreddit: "memes"));
   RxInt get postCount => (posts.value == null
           ? 0
           : posts.value!.after == null

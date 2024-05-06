@@ -22,14 +22,14 @@ class RedditSearchController extends GetxController {
 
   List<String> allSFWSubreddit = [];
   RxList<String> suggestions = <String>[].obs;
-  List<String> nsfwSubreddit = [];
+  List<String> allNSFWSubreddit = [];
 
   RxBool suggestSFW = true.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _loadSfwSubreddit();
+    _loadSubreddit();
 
     searchController.addListener(() {
       searchTextLength.value = searchController.text.length;
@@ -57,17 +57,34 @@ class RedditSearchController extends GetxController {
   // sfw
   void _updateSfwSuggestions() {
     if (searchController.text == "") {
-      suggestions.value = List.from(allSFWSubreddit);
+      suggestions.value =
+          List.from(suggestSFW.value ? allSFWSubreddit : allNSFWSubreddit);
       return;
     }
     suggestions.clear();
-    suggestions.addAll(allSFWSubreddit.where((element) =>
-        element.toLowerCase().contains(searchController.text.toLowerCase())));
+    if (suggestSFW.value) {
+      suggestions.addAll(allSFWSubreddit.where((element) =>
+          element.toLowerCase().contains(searchController.text.toLowerCase())));
+    } else {
+      suggestions.addAll(allNSFWSubreddit.where((element) =>
+          element.toLowerCase().contains(searchController.text.toLowerCase())));
+    }
   }
 
-  Future<void> _loadSfwSubreddit() async {
-    // // Read the content of file.txt
-    var fileContent = await rootBundle.loadString(AssetPaths.data.sfwSubreddit);
+  Future<void> _loadSubreddit() async {
+    allSFWSubreddit =
+        await _loadSubredditFromFile(AssetPaths.data.sfwSubreddit);
+    allNSFWSubreddit =
+        await _loadSubredditFromFile(AssetPaths.data.nsfwSubreddit);
+    print("all SFW subreddit length: ${allSFWSubreddit.length}");
+    print("all NSFW subreddit length: ${allNSFWSubreddit.length}");
+    Future.delayed(const Duration(milliseconds: 750), () {
+      _updateSfwSuggestions();
+    });
+  }
+
+  Future<List<String>> _loadSubredditFromFile(String path) async {
+    var fileContent = await rootBundle.loadString(path);
 
     // Remove square brackets and split the content by commas
     List<String> dataList = fileContent
@@ -77,17 +94,16 @@ class RedditSearchController extends GetxController {
         .split(',');
 
     // Trim each string in the list
-    allSFWSubreddit = dataList.map((e) => e.trim()).toList();
-    allSFWSubreddit.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    print(jsonEncode(allSFWSubreddit));
-    print("all subreddit length: ${allSFWSubreddit.length}");
-    Future.delayed(const Duration(milliseconds: 750), () {
-      _updateSfwSuggestions();
-    });
+    return dataList.map((e) => e.trim()).toList();
   }
 
   void onSuggestionsTap(String subreddit) {
     searchController.text = subreddit;
     validateSearch();
+  }
+
+  void toggleSuggestSFW() {
+    suggestSFW.value = !suggestSFW.value;
+    _updateSfwSuggestions();
   }
 }

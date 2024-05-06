@@ -47,23 +47,13 @@ class HomeScreen extends GetView<HomeController> {
             },
             icon: const Icon(Icons.search),
           ),
-          // IconButton(
-          //   onPressed: () {
-          //     controller.fetchPosts();
-          //   },
-          //   icon: const Icon(Icons.replay_outlined),
-          // ),
-          // Obx(
-          //   () => IconButton(
-          //     onPressed: () {
-          //       controller.settings.isSafeContentOnly.value =
-          //           !controller.settings.isSafeContentOnly.value;
-          //     },
-          //     icon: Icon(controller.settings.isSafeContentOnly.value
-          //         ? Icons.no_accounts
-          //         : Icons.safety_check),
-          //   ),
-          // ),
+          IconButton(
+            onPressed: () {
+              print("Icons.reddit");
+            },
+            icon: const Icon(Icons.reddit),
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: SafeArea(

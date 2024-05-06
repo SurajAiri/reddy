@@ -22,16 +22,33 @@ class SearchScreen extends GetView<RedditSearchController> {
             controller: controller.searchController,
             onEditingComplete: controller.validateSearch,
             enabled: !controller.isValidating.value,
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.health_and_safety_outlined),
-              onPressed: () {},
-            ),
-            prefixIcon: IconButton(
-              onPressed: () {
-                print("Icons.reddit");
-              },
-              icon: const Icon(Icons.reddit),
-            ),
+            suffixIcon: controller.searchTextLength.value > 0
+                ? IconButton(
+                    onPressed: () {
+                      controller.searchController.clear();
+                    },
+                    icon: const Icon(
+                      Icons.clear_rounded,
+                    ),
+                  )
+                : null,
+            prefixIcon: controller.settingController.isPremium.value &&
+                    !controller.settingController.isSafeContentOnly.value
+                ? IconButton(
+                    icon: Obx(
+                      () => Icon(
+                        Icons.health_and_safety_outlined,
+                        color: controller.suggestSFW.value
+                            ? Colors.black87
+                            : Colors.red[400],
+                      ),
+                    ),
+                    onPressed: controller.toggleSuggestSFW,
+                  )
+                : const Icon(
+                    Icons.search,
+                    color: Colors.black87,
+                  ),
           ),
         ),
         actions: [
