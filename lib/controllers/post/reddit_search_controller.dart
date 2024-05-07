@@ -47,8 +47,7 @@ class RedditSearchController extends GetxController {
     isValidating.value = false;
     if (v) {
       Get.back();
-      Get.find<HomeController>()
-          .fetchPosts(subreddit: searchController.text.trim());
+      Get.find<HomeController>().updateSubreddit(searchController.text.trim());
     } else {
       UiUtility.showToast("Invalid Subreddit", isError: true);
     }

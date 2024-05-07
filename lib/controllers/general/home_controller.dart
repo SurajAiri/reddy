@@ -11,12 +11,13 @@ import '../../models/reddit/reddit_post_model.dart';
 import 'package:http/http.dart' as http;
 
 class HomeController extends GetxController {
+  final settings = Get.find<SettingsController>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
   RxBool isLoading = false.obs;
-  final settings = Get.find<SettingsController>();
+
   Rx<ImageQuality> get imageQuality => settings.imageQuality;
   Rx<bool> get isSafeContentOnly => settings.isSafeContentOnly;
-  // RxList<RedditPostModel> posts = RxList();
+
   Rxn<RedditPostResponse> posts =
       Rxn<RedditPostResponse>(RedditPostResponse(subreddit: "memes"));
   RxInt get postCount => (posts.value == null
@@ -26,21 +27,47 @@ class HomeController extends GetxController {
               : posts.value!.posts.length + 1)
       .obs;
 
+  final postScrollController = ScrollController();
+  final quickOptionScrollController = ScrollController();
+
+// quick button
+  RxList<String> quickOptions = [
+    'memes',
+    'dankmemes',
+    'funny',
+    'aww',
+    'gaming',
+    'pics',
+    'videos',
+    'news',
+    'politics',
+    'worldnews',
+    'todayilearned',
+    'askreddit',
+    'science',
+    'gifs',
+    'movies',
+    'mildlyinteresting',
+    'tifu',
+    'jokes',
+  ].obs;
+
   @override
   void onInit() {
-    fetchPosts();
+    _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
     super.onInit();
   }
 
   void updateSubreddit(String newSubreddit) {
     if (newSubreddit == posts.value?.subreddit) return;
+    _quickOptionPressed(newSubreddit);
     posts.value?.subreddit = newSubreddit;
-    fetchPosts();
+    _fetchPosts(subreddit: newSubreddit);
   }
 
   void nextPage() {
     if (posts.value?.after != null) {
-      fetchPosts(direction: 1);
+      _fetchPosts(subreddit: posts.value?.subreddit ?? "memes", direction: 1);
     }
   }
 
@@ -52,14 +79,10 @@ class HomeController extends GetxController {
   }
 
   /// `direction` -1 for previous, 1 for next, 0 for reload
-  void fetchPosts({
-    String? subreddit,
+  void _fetchPosts({
+    required String subreddit,
     int direction = 0,
   }) async {
-    if (subreddit != posts.value?.subreddit && subreddit != null) {
-      posts.value = RedditPostResponse(subreddit: subreddit);
-    }
-
     isLoading.value = true;
     // Fetch posts
     posts.value = await RedditApi.fetchSubredditPosts(
@@ -92,10 +115,26 @@ class HomeController extends GetxController {
   }
 
   void floatingButtonAction() async {
-    // print('Floating button pressed');
     updateSubreddit('memes');
     settings.isSafeContentOnly.value = true;
-    // nextPage();
-    // settings.imageQuality.value = ImageQuality.mediumHigh;
+  }
+
+  // quick option pressed
+  void _quickOptionPressed(String subreddit) {
+    if (subreddit == posts.value?.subreddit) return;
+    // remove the subreddit from the list and insert it at the top if exists if there are more than 10 pop last one and insert at the top
+    print("new subreddit $subreddit");
+    if (quickOptions.contains(subreddit)) {
+      quickOptions.remove(subreddit);
+    } else if (quickOptions.length >= 10) {
+      quickOptions.removeLast();
+    }
+    quickOptions.insert(0, subreddit);
+    quickOptionScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.bounceInOut,
+    );
+    print("quick options: $quickOptions");
   }
 }

@@ -1,27 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:reddy/config/utils/constants.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
+import 'package:reddy/views/features/player/widgets/hls_video_player.dart';
 
-class TestScreen extends StatelessWidget {
-  const TestScreen({super.key});
+import 'test_controller.dart';
+
+class TestScreen extends GetView<TestController> {
+  TestScreen({super.key});
+
+  @override
+  final controller = Get.put(TestController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Test Screen"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.network(
-              "https://preview.redd.it/zxnkmgsq6rvc1.jpeg?width=108&crop=smart&auto=webp&s=bd760a5a121c286f328adb66979e1c64422562d6",
-              // height: 200,
-              fit: BoxFit.fill,
-              width: double.maxFinite,
-            ),
-          ],
+        appBar: AppBar(
+          title: GetBuilder<SettingsController>(
+            builder: (controller) =>
+                Text(controller.focusPostId.value.toString()),
+          ),
         ),
-      ),
-    );
+        body: ListView.builder(
+          itemBuilder: (context, index) => Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Obx(
+              () => HlsVideoPlayer(
+                video: controller.videos[index],
+                thumbnailUrl: kDemoImgUrl,
+                postId: index.toString(),
+              ),
+            ),
+          ),
+          itemCount: controller.videos.length,
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: controller.floatingActionButtonPressed,
+          child: const Icon(Icons.add),
+        ));
   }
 }

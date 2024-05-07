@@ -198,7 +198,7 @@ class PostField extends StatelessWidget {
     // double height = width * post.thumbnail.height / post.thumbnail.width;
 // height using aspect ratio
     double height = width * img.height / img.width;
-    print("width: $width,  height: $height, url: ${img.url}");
+    // print("width: $width,  height: $height, url: ${img.url}");
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: post.isNSFW && safeContentOnly

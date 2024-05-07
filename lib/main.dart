@@ -6,6 +6,7 @@ import 'package:reddy/config/utils/constants.dart';
 
 import 'controllers/general/settings_controller.dart';
 import 'models/history/reddit_history_model.dart';
+import 'views/test/test_screen.dart';
 
 void main() async {
   Get.lazyPut(() => SettingsController());

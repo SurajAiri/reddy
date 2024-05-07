@@ -16,4 +16,13 @@ class SettingsController extends GetxController {
   //   isSafeContentOnly.value = !isSafeContentOnly.value;
   //   print('value changed to ${isSafeContentOnly.value}');
   // }
+
+  void lockVideoPlayer(String postId) {
+    focusPostId.value = postId;
+  }
+
+  void releaseVideoPlayer(String postId) {
+    if (postId != focusPostId.value) return;
+    focusPostId.value = null;
+  }
 }

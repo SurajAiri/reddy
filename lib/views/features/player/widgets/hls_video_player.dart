@@ -34,10 +34,12 @@ class HlsVideoPlayer extends StatefulWidget {
 
 class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
   late BetterPlayerController controller;
+  late SettingsController settingsController;
   @override
   void initState() {
     super.initState();
-    var postId = Get.find<SettingsController>().focusPostId.value;
+    settingsController = Get.find<SettingsController>();
+    var lockPostId = settingsController.focusPostId.value;
     // bool autoPlay = (postId == null || postId == "") && widget.autoPlay;
     controller = BetterPlayerController(
       BetterPlayerConfiguration(
@@ -59,11 +61,20 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
     );
 
     controller.addEventsListener((event) {
+      // video player lock and release
       if (event.betterPlayerEventType == BetterPlayerEventType.play) {
-        Get.find<SettingsController>().focusPostId.value = widget.postId;
-      } else if (event.betterPlayerEventType == BetterPlayerEventType.pause) {
-        Get.find<SettingsController>().focusPostId.value = null;
+        settingsController.lockVideoPlayer(widget.postId);
+        controller.setControlsVisibility(false);
+      } else if (event.betterPlayerEventType == BetterPlayerEventType.pause &&
+          settingsController.focusPostId.value == widget.postId) {
+        settingsController.releaseVideoPlayer(widget.postId);
+      } else if (event.betterPlayerEventType ==
+              BetterPlayerEventType.finished &&
+          settingsController.focusPostId.value == widget.postId) {
+        settingsController.releaseVideoPlayer(widget.postId);
       }
+
+      // video sound change
       if (event.betterPlayerEventType == BetterPlayerEventType.setVolume) {
         if (event.parameters?['volume'] == 0) {
           widget.onMuteChange?.call(true);
@@ -71,6 +82,7 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
           widget.onMuteChange?.call(false);
         }
       }
+      // playback speed change
       if (event.betterPlayerEventType == BetterPlayerEventType.setSpeed) {
         widget.onPlaybackSpeedChange?.call(event.parameters?['speed']);
       }
@@ -79,10 +91,16 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
       controller.setVolume(0);
     }
 
-    Get.find<SettingsController>().focusPostId.listen((value) {
-      if (value != null && value != "" && value != widget.postId) {
+    settingsController.focusPostId.listenAndPump((value) {
+      if (!mounted) return;
+      if (value != null &&
+          value != "" &&
+          value != widget.postId &&
+          controller.isPlaying() == true) {
         controller.pause();
-      } else if (value == widget.postId && controller.isPlaying() == false) {
+      } else if (value == widget.postId &&
+          controller.isPlaying() == false &&
+          settingsController.autoPlay.value) {
         controller.play();
         controller.setControlsVisibility(false);
       }
@@ -92,9 +110,8 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
 
   @override
   void dispose() {
+    settingsController.releaseVideoPlayer(widget.postId);
     super.dispose();
-    print("we got disposed");
-    Get.find<SettingsController>().focusPostId.value = null;
   }
 
   @override
@@ -102,9 +119,12 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
     return VisibilityDetector(
       key: Key(widget.postId),
       onVisibilityChanged: (visibilityInfo) {
-        if (visibilityInfo.visibleFraction == 1) {
-          Get.find<SettingsController>().focusPostId.value = widget.postId;
-          // print("visible ${widget.postId}");
+        if (visibilityInfo.visibleFraction == 1 &&
+            settingsController.focusPostId.value == null) {
+          settingsController.lockVideoPlayer(widget.postId);
+        } else if (visibilityInfo.visibleFraction < 1 &&
+            settingsController.focusPostId.value == widget.postId) {
+          settingsController.releaseVideoPlayer(widget.postId);
         }
       },
       child: AspectRatio(

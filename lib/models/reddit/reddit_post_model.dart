@@ -100,7 +100,7 @@ class RedditPostModel {
       } else {
         contentType = PostContentType.image;
       }
-      print(contentType);
+      // print(contentType);
 
       previews = contentType == PostContentType.gif
           ? _parseGifPreviews(json)
