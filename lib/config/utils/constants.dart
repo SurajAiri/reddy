@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 const kSplashDelayInMilliSecond = 3000;
 
+const kMinAppUpgraderVersion = "1.1.0";
 const kSafeContentOnly = true;
 const kPlayStoreDashboardLink =
     "https://play.google.com/store/apps/dev?id=8059038717375510913";

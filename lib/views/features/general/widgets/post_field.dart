@@ -12,6 +12,7 @@ import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/config/utils/ui_utility.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
+import 'package:reddy/views/features/general/widgets/red_web_view.dart';
 import 'package:reddy/views/features/player/widgets/hls_video_player.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -125,6 +126,12 @@ class PostField extends StatelessWidget {
             ),
             if (post.isNSFW && safeContentOnly)
               _buildImgNotShow(MediaQuery.of(context).size.width)
+            // else if (!post.domain.contains("redd"))
+            //   RedWebView(
+            //     url: post.url,
+            //     height: MediaQuery.of(context).size.width / post.aspectRatio,
+            //     width: MediaQuery.of(context).size.width,
+            //   )
             else if (post.video == null &&
                 post.previews.isEmpty &&
                 post.contentType != PostContentType.text)

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reddy/config/routes/routes.dart';
@@ -7,7 +9,6 @@ import 'package:reddy/config/utils/asset_paths.dart';
 import 'package:reddy/controllers/general/home_controller.dart';
 import 'package:reddy/views/features/general/widgets/post_field.dart';
 import 'package:reddy/views/widgets/red_lottie_anim.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 import '../widgets/home_drawer.dart';
 
 class HomeScreen extends GetView<HomeController> {
@@ -21,18 +22,18 @@ class HomeScreen extends GetView<HomeController> {
       // body: _buildBody(),
       body: buildMainBody(context),
       drawer: const HomeDrawer(),
-      floatingActionButton: Obx(
-        () => controller.settings.isPremium.value
-            ? FloatingActionButton(
-                onPressed: controller.floatingButtonAction,
-                backgroundColor: Colors.red[300],
-                child: const Icon(
-                  Icons.replay_outlined,
-                  color: Colors.white,
-                ),
-              )
-            : const SizedBox(),
-      ),
+      // floatingActionButton: Obx(
+      //   () => controller.settings.isPremium.value
+      //       ? FloatingActionButton(
+      //           onPressed: controller.floatingButtonAction,
+      //           backgroundColor: Colors.red[300],
+      //           child: const Icon(
+      //             Icons.replay_outlined,
+      //             color: Colors.white,
+      //           ),
+      //         )
+      //       : const SizedBox(),
+      // ),
     );
   }
 
@@ -134,12 +135,12 @@ class HomeScreen extends GetView<HomeController> {
                     },
                     icon: const Icon(Icons.search),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      print("Icons.reddit");
-                    },
-                    icon: const Icon(Icons.reddit),
-                  ),
+                  // IconButton(
+                  //   onPressed: () {
+                  //     print("Icons.reddit");
+                  //   },
+                  //   icon: const Icon(Icons.reddit),
+                  // ),
                   const SizedBox(width: 16),
                 ],
               ),

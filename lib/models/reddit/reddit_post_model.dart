@@ -36,6 +36,13 @@ class RedditPostModel {
     } else if (thumbnail.width == 0 || thumbnail.height == 0) {
       return 0.35;
     }
+    // if (thumbnail.width != 0 || thumbnail.height != 0) {
+    //   return 0.35;
+    // } else if (previews.isNotEmpty) {
+    //   return previews[0].width / previews[0].height;
+    // } else if (video != null) {
+    //   return video!.aspectRatio;
+    // }
     return thumbnail.width / thumbnail.height;
   }
 
