@@ -43,6 +43,7 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
   bool _isPlaying = false;
   bool _isMuted = false;
 
+
   @override
   void initState() {
     super.initState();
@@ -136,8 +137,6 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
       
       if (isPlaying) {
         settingsController.lockVideoPlayer(widget.postId);
-        // _chewieController?.setControlsVisibility(false);
-        // _chewieController.showControls= false;
       } else {
         if (settingsController.focusPostId.value == widget.postId) {
           settingsController.releaseVideoPlayer(widget.postId);
@@ -164,6 +163,19 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
       }
     }
   }
+  void _playVideo() {
+    if (_isInitialized && mounted) {
+      _videoPlayerController.play();
+      print('Playing video: ${widget.postId}');
+    }
+  }
+
+  void _pauseVideo() {
+    if (_isInitialized && mounted) {
+      _videoPlayerController.pause();
+      print('Pausing video: ${widget.postId}');
+    }
+  }
 
   void _setupSettingsListener() {
     settingsController.focusPostId.listen((value) {
@@ -173,12 +185,11 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
           value.isNotEmpty &&
           value != widget.postId &&
           _videoPlayerController.value.isPlaying) {
-        _videoPlayerController.pause();
+        _pauseVideo();
       } else if (value == widget.postId &&
           !_videoPlayerController.value.isPlaying &&
           settingsController.autoPlay.value) {
-        _videoPlayerController.play();
-        // _chewieController?.setControlsVisibility(false);
+        _playVideo();
       }
     });
   }
@@ -186,18 +197,68 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
   void _handleVisibilityChange(VisibilityInfo visibilityInfo) {
     if (!mounted || !_isInitialized) return;
 
-    if (visibilityInfo.visibleFraction == 1.0 &&
-        settingsController.focusPostId.value == null) {
-      settingsController.lockVideoPlayer(widget.postId);
-    } else if (visibilityInfo.visibleFraction < 1.0 &&
-        settingsController.focusPostId.value == widget.postId) {
+    print('Visibility changed for ${widget.postId}: ${visibilityInfo.visibleFraction}');
+
+    // Simple approach: pause if less than 50% visible, play if fully visible
+    if (visibilityInfo.visibleFraction < 0.5) {
+      // Widget is mostly out of view - pause immediately
+      _handleWidgetBecameInvisible();
+    } else if (visibilityInfo.visibleFraction >= 0.8) {
+      // Widget is mostly visible - potentially play
+      _handleWidgetBecameVisible();
+    }
+  }
+
+  void _handleWidgetBecameInvisible() {
+    print('Video widget became invisible: ${widget.postId}');
+    
+    // ALWAYS pause the video when not visible, regardless of focus state
+    if (_videoPlayerController.value.isPlaying) {
+      _videoPlayerController.pause();
+      print('Force paused video: ${widget.postId}');
+    }
+    
+    // Release focus if this widget has it
+    if (settingsController.focusPostId.value == widget.postId) {
       settingsController.releaseVideoPlayer(widget.postId);
     }
   }
 
+  void _handleWidgetBecameVisible() {
+    print('Video widget became visible: ${widget.postId}');
+    
+    // Only auto-play if autoPlay is enabled and no other video is focused
+    if (settingsController.autoPlay.value && 
+        settingsController.focusPostId.value == null) {
+      settingsController.lockVideoPlayer(widget.postId);
+      // Small delay to ensure smooth transition
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && 
+            settingsController.focusPostId.value == widget.postId &&
+            !_videoPlayerController.value.isPlaying) {
+          _videoPlayerController.play();
+          print('Auto-playing video: ${widget.postId}');
+        }
+      });
+    }
+  }
+
+
+
   @override
   void dispose() {
-    settingsController.releaseVideoPlayer(widget.postId);
+    print('Disposing video player: ${widget.postId}');
+    
+    // FORCE pause the video when disposing
+    if (_isInitialized && _videoPlayerController.value.isPlaying) {
+      _videoPlayerController.pause();
+    }
+    
+    // Release focus
+    if (settingsController.focusPostId.value == widget.postId) {
+      settingsController.releaseVideoPlayer(widget.postId);
+    }
+    
     _videoPlayerController.removeListener(_videoListener);
     _chewieController?.dispose();
     _videoPlayerController.dispose();
@@ -207,7 +268,7 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     return VisibilityDetector(
-      key: Key(widget.postId),
+      key: Key('video_${widget.postId}'),
       onVisibilityChanged: _handleVisibilityChange,
       child: AspectRatio(
         aspectRatio: widget.video.aspectRatio,
