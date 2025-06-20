@@ -1,3 +1,7 @@
 {
-  "cSpell.words": ["Reddy"]
+  "cSpell.words": [
+    "Reddy"
+  ],
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "cmake.sourceDirectory": "/Users/suraj/vscode/flutter/projects/reddy/linux"
 }

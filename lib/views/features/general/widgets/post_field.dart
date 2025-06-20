@@ -258,7 +258,8 @@ class PostField extends StatelessWidget {
   Widget buildVideoPlayer() {
     print("video player");
     return GetBuilder<SettingsController>(
-      builder: (controller) => HlsVideoPlayer(
+      // builder: (controller) => HlsVideoPlayer(
+      builder: (controller) => ModernHlsVideoPlayer(
         postId: post.id,
         video: post.video!,
         thumbnailUrl: post.thumbnail.url,
