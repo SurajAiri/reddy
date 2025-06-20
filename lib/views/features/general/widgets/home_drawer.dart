@@ -6,11 +6,16 @@ import 'package:reddy/config/routes/routes.dart';
 import 'package:reddy/config/utils/asset_paths.dart';
 import 'package:reddy/config/utils/constants.dart';
 import 'package:reddy/config/utils/ui_utility.dart';
+import 'package:reddy/config/utils/utility.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/views/features/general/widgets/drawer_element.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeDrawer extends StatelessWidget {
   const HomeDrawer({super.key});
+  static int tapCount = 0;
+  static DateTime? lastTapTime;
+  // Initialize settings controller for premium status tracking;
 
   @override
   Widget build(BuildContext context) {
@@ -53,14 +58,37 @@ class HomeDrawer extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    "Reddy",
-                    style: TextStyle(
+                    GestureDetector(
+                    onTap: () {
+                      if(Get.find<SettingsController>().isPremium.value){
+                        UiUtility.showToast("You are already a premium user!");
+                        return;
+                      }
+                      final now = DateTime.now();
+                      final timeDiff = lastTapTime != null ? now.difference(lastTapTime!) : const Duration(seconds: 2);
+                      
+                      if (timeDiff.inSeconds < 1) {
+                      tapCount++;
+                      if (tapCount >= 7) {
+                        tapCount = 0;
+                        Get.find<SettingsController>().isPremium.value = true;
+                        UiUtility.showToast("Premium mode activated!");
+                      }
+                      } else {
+                      tapCount = 1;
+                      }
+                      
+                      lastTapTime = now;
+                    },
+                    child: const Text(
+                      "Reddy",
+                      style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       fontSize: 20,
+                      ),
                     ),
-                  )
+                    )
                 ],
               ),
             ),

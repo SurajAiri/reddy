@@ -22,18 +22,18 @@ class HomeScreen extends GetView<HomeController> {
       // body: _buildBody(),
       body: buildMainBody(context),
       drawer: const HomeDrawer(),
-      // floatingActionButton: Obx(
-      //   () => controller.settings.isPremium.value
-      //       ? FloatingActionButton(
-      //           onPressed: controller.floatingButtonAction,
-      //           backgroundColor: Colors.red[300],
-      //           child: const Icon(
-      //             Icons.replay_outlined,
-      //             color: Colors.white,
-      //           ),
-      //         )
-      //       : const SizedBox(),
-      // ),
+      floatingActionButton: Obx(
+        () => controller.settings.isPremium.value
+            ? FloatingActionButton(
+                onPressed: controller.floatingButtonAction,
+                backgroundColor: Colors.red[300],
+                child: const Icon(
+                  Icons.replay_outlined,
+                  color: Colors.white,
+                ),
+              )
+            : const SizedBox(),
+      ),
     );
   }
 
