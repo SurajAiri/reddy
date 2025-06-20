@@ -60,11 +60,17 @@ class HomeDrawer extends StatelessWidget {
                   const SizedBox(height: 4),
                     GestureDetector(
                     onTap: () {
-                      if(Get.find<SettingsController>().isPremium.value){
-                        UiUtility.showToast("You are already a premium user!");
-                        return;
-                      }
                       final now = DateTime.now();
+                      
+                        if(Get.find<SettingsController>().isPremium.value){
+                        final now = DateTime.now();
+                        if(lastTapTime == null || now.difference(lastTapTime!).inSeconds >= 2) {
+                          UiUtility.showToast("You are already a premium user!");
+                          lastTapTime = now;
+                        }
+                        return;
+                        }
+                      
                       final timeDiff = lastTapTime != null ? now.difference(lastTapTime!) : const Duration(seconds: 2);
                       
                       if (timeDiff.inSeconds < 1) {

@@ -4,7 +4,7 @@ import '../../config/utils/enums.dart';
 
 class SettingsController extends GetxController {
   RxBool isSafeContentOnly = true.obs;
-  RxBool isPremium = true.obs;
+  RxBool isPremium = false.obs;
   RxBool sound = true.obs;
   RxBool autoPlay = true.obs;
   RxBool isLooping = false.obs;
