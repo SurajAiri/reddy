@@ -83,12 +83,32 @@ class PostField extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "r/${post.subreddit}",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                "r/${post.subreddit}",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: Text(
+                                  post.contentType.name.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              )
+                            ],
                           ),
                           Text(
                             timeago.format(post.created.toLocal()),

@@ -42,4 +42,14 @@ class Utility {
       ImageQuality.highest => "Highest",
     };
   }
+
+  static String encodePostContentType(PostContentType type) {
+    return switch (type) {
+      PostContentType.image => "Image",
+      PostContentType.gif => "Gif",
+      PostContentType.gifv => "Gifv",
+      PostContentType.video => "Video",
+      PostContentType.text => "Text",
+    };
+  }
 }
