@@ -61,8 +61,8 @@ class HomeDrawer extends StatelessWidget {
                     GestureDetector(
                     onTap: () {
                       final now = DateTime.now();
-                      
-                        if(Get.find<SettingsController>().isPremium.value){
+                      SettingsController settingsController = Get.find<SettingsController>();
+                      if(settingsController.isPremium.value){
                         final now = DateTime.now();
                         if(lastTapTime == null || now.difference(lastTapTime!).inSeconds >= 2) {
                           UiUtility.showToast("You are already a premium user!");
@@ -77,7 +77,8 @@ class HomeDrawer extends StatelessWidget {
                       tapCount++;
                       if (tapCount >= 7) {
                         tapCount = 0;
-                        Get.find<SettingsController>().isPremium.value = true;
+                        settingsController.isPremium.value = true;
+                        settingsController.isSafeContentOnly.value = false;
                         UiUtility.showToast("Premium mode activated!");
                       }
                       } else {

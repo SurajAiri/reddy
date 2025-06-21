@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:reddy/config/utils/asset_paths.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/controllers/post/reddit_search_controller.dart';
 import 'package:reddy/models/subreddits/subreddit_model.dart';
 import 'package:reddy/views/widgets/red_lottie_anim.dart';

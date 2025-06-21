@@ -197,7 +197,7 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
   void _handleVisibilityChange(VisibilityInfo visibilityInfo) {
     if (!mounted || !_isInitialized) return;
 
-    print('Visibility changed for ${widget.postId}: ${visibilityInfo.visibleFraction}');
+    // print('Visibility changed for ${widget.postId}: ${visibilityInfo.visibleFraction}');
 
     // Simple approach: pause if less than 50% visible, play if fully visible
     if (visibilityInfo.visibleFraction < 0.5) {
@@ -210,7 +210,7 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
   }
 
   void _handleWidgetBecameInvisible() {
-    print('Video widget became invisible: ${widget.postId}');
+    // print('Video widget became invisible: ${widget.postId}');
     
     // ALWAYS pause the video when not visible, regardless of focus state
     if (_videoPlayerController.value.isPlaying) {
@@ -225,7 +225,7 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
   }
 
   void _handleWidgetBecameVisible() {
-    print('Video widget became visible: ${widget.postId}');
+    // print('Video widget became visible: ${widget.postId}');
     
     // Only auto-play if autoPlay is enabled and no other video is focused
     if (settingsController.autoPlay.value && 
@@ -247,7 +247,7 @@ class _ModernHlsVideoPlayerState extends State<ModernHlsVideoPlayer> {
 
   @override
   void dispose() {
-    print('Disposing video player: ${widget.postId}');
+    // print('Disposing video player: ${widget.postId}');
     
     // FORCE pause the video when disposing
     if (_isInitialized && _videoPlayerController.value.isPlaying) {

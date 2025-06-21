@@ -10,13 +10,9 @@ import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/services/reddit_api/reddit_api.dart';
 import 'package:reddy/services/subranking/subranking_api.dart';
 import 'package:reddy/models/subreddits/subreddit_model.dart';
+import 'package:reddy/services/subranking/subranking_cache_sevice.dart';
 
 import '../../services/subranking/utility.dart';
-
-enum SearchMode {
-  local,
-  api,
-}
 
 class RedditSearchController extends GetxController {
   final settingController = Get.find<SettingsController>();
@@ -31,16 +27,17 @@ class RedditSearchController extends GetxController {
   // Local data
   List<String> allSFWSubreddit = [];
   List<String> allNSFWSubreddit = [];
-  
+
   // API data
   RxList<SubredditModel> apiSubreddits = <SubredditModel>[].obs;
-  
+
   // Current suggestions based on mode
-  RxList<dynamic> suggestions = <dynamic>[].obs; // Can be String or SubredditModel
-  
+  RxList<dynamic> suggestions =
+      <dynamic>[].obs; // Can be String or SubredditModel
+
   RxBool suggestSFW = true.obs;
   Rx<SearchMode> currentSearchMode = SearchMode.local.obs;
-  
+
   // API settings
   Rx<SubrankingType> selectedType = SubrankingType.largest.obs;
   Rx<SubrankingCategory> selectedCategory = SubrankingCategory.sfw.obs;
@@ -48,33 +45,57 @@ class RedditSearchController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadLocalSubreddits();
+
+    initSearchTypes();
+
+    // Load API data for premium users by default
+    if (!settingController.isPremium.value ||
+        currentSearchMode.value == SearchMode.local) {
+      _loadLocalSubreddits();
+    } else if (settingController.isPremium.value &&
+        currentSearchMode.value == SearchMode.api) {
+      _loadApiSubreddits();
+    }
 
     searchController.addListener(() {
       searchTextLength.value = searchController.text.length;
       _updateSuggestions();
     });
-    
-    // Load API data for premium users by default
-    if (settingController.isPremium.value) {
-      _loadApiSubreddits();
-    }
+  }
+
+  void onClose() {
+    searchController.dispose();
+    searchFocusNode.dispose();
+    super.onClose();
+  }
+
+  void updateSearchTypes() {
+    settingController.selectedSubrankingType = selectedType.value;
+    settingController.selectedSubrankingCategory = selectedCategory.value;
+    settingController.currentSearchMode = currentSearchMode.value;
+  }
+
+  void initSearchTypes() {
+    currentSearchMode.value = settingController.currentSearchMode;
+    selectedType.value = settingController.selectedSubrankingType;
+    selectedCategory.value = settingController.selectedSubrankingCategory;
+
   }
 
   void validateSearch() async {
     if (searchTextLength.value < 3) return;
     isValidating.value = true;
-    
+
     String subredditName = searchController.text.trim();
-    
+
     // Remove 'r/' prefix if present
     if (subredditName.startsWith('r/')) {
       subredditName = subredditName.substring(2);
     }
-    
+
     bool isValid = await RedditApi.checkIfSubredditExist(subredditName);
     isValidating.value = false;
-    
+
     if (isValid) {
       Get.back();
       Get.find<HomeController>().updateSubreddit(subredditName);
@@ -94,18 +115,19 @@ class RedditSearchController extends GetxController {
   void _updateLocalSuggestions() {
     if (searchController.text.isEmpty) {
       suggestions.value = List<String>.from(
-        suggestSFW.value ? allSFWSubreddit : allNSFWSubreddit
-      );
+          suggestSFW.value ? allSFWSubreddit : allNSFWSubreddit);
       return;
     }
     suggestions.clear();
-    List<String> sourceList = suggestSFW.value ? allSFWSubreddit : allNSFWSubreddit;
-    
-    suggestions.addAll(
-      sourceList.where((element) =>
-        element.toLowerCase().contains(searchController.text.toLowerCase())
-      ).take(20) // Limit to 20 suggestions
-    );
+    List<String> sourceList =
+        suggestSFW.value ? allSFWSubreddit : allNSFWSubreddit;
+
+    suggestions.addAll(sourceList
+            .where((element) => element
+                .toLowerCase()
+                .contains(searchController.text.toLowerCase()))
+            .take(20) // Limit to 20 suggestions
+        );
   }
 
   void _updateApiSuggestions() {
@@ -113,22 +135,25 @@ class RedditSearchController extends GetxController {
       suggestions.value = List<SubredditModel>.from(apiSubreddits);
       return;
     }
-    
+
     suggestions.clear();
-    suggestions.addAll(
-      apiSubreddits.where((subreddit) =>
-        subreddit.name.toLowerCase().contains(searchController.text.toLowerCase())
-      ).take(20) // Limit to 20 suggestions
-    );
+    suggestions.addAll(apiSubreddits
+            .where((subreddit) => subreddit.name
+                .toLowerCase()
+                .contains(searchController.text.toLowerCase()))
+            .take(20) // Limit to 20 suggestions
+        );
   }
 
   Future<void> _loadLocalSubreddits() async {
-    allSFWSubreddit = await _loadSubredditFromFile(AssetPaths.data.sfwSubreddit);
-    allNSFWSubreddit = await _loadSubredditFromFile(AssetPaths.data.nsfwSubreddit);
-    
+    allSFWSubreddit =
+        await _loadSubredditFromFile(AssetPaths.data.sfwSubreddit);
+    allNSFWSubreddit =
+        await _loadSubredditFromFile(AssetPaths.data.nsfwSubreddit);
+
     print("Local SFW subreddit length: ${allSFWSubreddit.length}");
     print("Local NSFW subreddit length: ${allNSFWSubreddit.length}");
-    
+
     Future.delayed(const Duration(milliseconds: 750), () {
       if (currentSearchMode.value == SearchMode.local) {
         _updateSuggestions();
@@ -138,23 +163,25 @@ class RedditSearchController extends GetxController {
 
   Future<void> _loadApiSubreddits() async {
     if (!settingController.isPremium.value) return;
-    
+    updateSearchTypes();
+
     isLoadingApiData.value = true;
-    
+
     try {
-      List<SubredditModel> fetchedSubreddits = await SubrankingApi.fetchSubredditNames(
+      List<SubredditModel> fetchedSubreddits =
+          await SubrankingCacheService.fetchSubredditNames(
         type: selectedType.value,
         category: selectedCategory.value,
-        nsfw: !suggestSFW.value,
+        nsfw: selectedCategory.value != SubrankingCategory.sfw,
         limit: 100,
       );
-      
+
       apiSubreddits.value = fetchedSubreddits;
-      
+
       if (currentSearchMode.value == SearchMode.api) {
         _updateSuggestions();
       }
-      
+
       print("API subreddits loaded: ${apiSubreddits.length}");
     } catch (e) {
       print("Error loading API subreddits: $e");
@@ -178,7 +205,7 @@ class RedditSearchController extends GetxController {
 
   void onSuggestionsTap(dynamic suggestion) {
     String subredditName;
-    
+
     if (suggestion is String) {
       subredditName = suggestion;
     } else if (suggestion is SubredditModel) {
@@ -186,17 +213,20 @@ class RedditSearchController extends GetxController {
     } else {
       return;
     }
-    
+
     searchController.text = subredditName;
     validateSearch();
   }
 
   void toggleSuggestSFW() {
     suggestSFW.value = !suggestSFW.value;
-    
-    if (currentSearchMode.value == SearchMode.api) {
-      _loadApiSubreddits(); // Reload with new NSFW setting
-    } else {
+
+    // if (currentSearchMode.value == SearchMode.api) {
+    //   _loadApiSubreddits(); // Reload with new NSFW setting
+    // } else {
+    // _updateSuggestions();
+    // }
+    if (currentSearchMode.value == SearchMode.local) {
       _updateSuggestions();
     }
   }
@@ -206,9 +236,9 @@ class RedditSearchController extends GetxController {
       UiUtility.showToast("Premium feature", isError: true);
       return;
     }
-    
+
     currentSearchMode.value = mode;
-    
+
     if (mode == SearchMode.api && apiSubreddits.isEmpty) {
       _loadApiSubreddits();
     } else {
@@ -221,17 +251,17 @@ class RedditSearchController extends GetxController {
     SubrankingCategory? category,
   }) {
     bool shouldReload = false;
-    
+
     if (type != null && type != selectedType.value) {
       selectedType.value = type;
       shouldReload = true;
     }
-    
+
     if (category != null && category != selectedCategory.value) {
       selectedCategory.value = category;
       shouldReload = true;
     }
-    
+
     if (shouldReload && currentSearchMode.value == SearchMode.api) {
       _loadApiSubreddits();
     }
@@ -247,7 +277,7 @@ class RedditSearchController extends GetxController {
   bool get isLocalMode => currentSearchMode.value == SearchMode.local;
   bool get isApiMode => currentSearchMode.value == SearchMode.api;
   bool get canUseApiMode => settingController.isPremium.value;
-  
+
   String getSearchModeTitle() {
     switch (currentSearchMode.value) {
       case SearchMode.local:
