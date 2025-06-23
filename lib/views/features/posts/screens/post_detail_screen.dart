@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
 import 'package:reddy/views/features/general/widgets/post_field.dart';
 import 'package:reddy/views/widgets/screen_layout.dart';
@@ -15,6 +17,7 @@ class SinglePostScreen extends StatelessWidget {
           PostField(
             post: post,
             isSinglePost: true,
+            safeContentOnly: Get.find<SettingsController>().isSafeContentOnly.value,
           ),
         ],
       ),

@@ -14,6 +14,7 @@ import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
 import 'package:reddy/views/features/general/widgets/red_web_view.dart';
 import 'package:reddy/views/features/player/widgets/hls_video_player.dart';
+import 'package:reddy/views/features/posts/screens/post_detail_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostField extends StatelessWidget {
@@ -39,8 +40,9 @@ class PostField extends StatelessWidget {
       onTap: isSinglePost
           ? null
           : () {
+              // print("Post tapped: ${post.id}");
               // Get.toNamed(AllRoutes.postDetailsScreen, arguments: post);
-              // Get.to(SinglePostScreen(post: post));
+              Get.to(SinglePostScreen(post: post));
             },
       child: Container(
         decoration: BoxDecoration(

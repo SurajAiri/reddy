@@ -416,9 +416,11 @@ class SearchScreen extends GetView<RedditSearchController> {
           children: [
             CircleAvatar(
               radius: 16,
-              backgroundImage: subreddit.iconUrl.isNotEmpty 
-                  ? NetworkImage(subreddit.iconUrl)
-                  : null,
+              // to save network calls, we can use a placeholder or a local image
+              // backgroundImage: subreddit.iconUrl.isNotEmpty 
+                  // ? NetworkImage(subreddit.iconUrl)
+                  // : null,
+
               backgroundColor: Colors.blue[100],
               child: subreddit.iconUrl.isEmpty
                   ? Text(
