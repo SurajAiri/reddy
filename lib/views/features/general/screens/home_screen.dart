@@ -18,8 +18,6 @@ class HomeScreen extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: controller.scaffoldKey,
-      // appBar: _buildAppbar(),
-      // body: _buildBody(),
       body: buildMainBody(context),
       drawer: const HomeDrawer(),
       floatingActionButton: Obx(
@@ -135,12 +133,6 @@ class HomeScreen extends GetView<HomeController> {
                     },
                     icon: const Icon(Icons.search),
                   ),
-                  // IconButton(
-                  //   onPressed: () {
-                  //     print("Icons.reddit");
-                  //   },
-                  //   icon: const Icon(Icons.reddit),
-                  // ),
                   const SizedBox(width: 16),
                 ],
               ),
@@ -154,7 +146,6 @@ class HomeScreen extends GetView<HomeController> {
             ],
           ),
         ),
-        // buildAdWidget(),
       ],
     );
   }

@@ -4,6 +4,7 @@ import 'package:get/get_rx/get_rx.dart';
 import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/config/utils/ui_utility.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
+import 'package:reddy/models/reddit/reddit_info_model.dart';
 import 'package:reddy/models/reddit/reddit_post_response.dart';
 import 'package:reddy/services/reddit_api/reddit_api.dart';
 
@@ -26,6 +27,8 @@ class HomeController extends GetxController {
               ? posts.value!.posts.length
               : posts.value!.posts.length + 1)
       .obs;
+  RedditInfoModel? redditInfo;
+  RedditInfoModel? get getRedditInfo => redditInfo;
 
   final postScrollController = ScrollController();
   final quickOptionScrollController = ScrollController();
@@ -54,8 +57,17 @@ class HomeController extends GetxController {
 
   @override
   void onInit() {
-    _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
     super.onInit();
+    if (redditInfo == null) return;
+    _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    if (redditInfo == null) {
+      Get.toNamed('/reddit-info');
+    }
   }
 
   void updateSubreddit(String newSubreddit) {
@@ -84,6 +96,7 @@ class HomeController extends GetxController {
     int direction = 0,
   }) async {
     isLoading.value = true;
+    print("calling fetch reddit posts");
     // Fetch posts
     posts.value = await RedditApi.fetchSubredditPosts(
       subreddit: posts.value?.subreddit ?? 'memes',
@@ -136,5 +149,16 @@ class HomeController extends GetxController {
       curve: Curves.bounceInOut,
     );
     print("quick options: $quickOptions");
+  }
+
+  void updateRedditInfo(RedditInfoModel info) {
+    redditInfo = info;
+    // if (postCount.value < 1) {
+    //   _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
+    // }
+  }
+
+  void updateRedditCookie(String cookie) {
+    redditInfo?.cookies = cookie;
   }
 }

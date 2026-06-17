@@ -1,10 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:reddy/config/utils/api_callback_handler.dart';
 import 'package:reddy/config/utils/api_callback_listener.dart';
 import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/config/utils/utility.dart';
+import 'package:reddy/controllers/general/home_controller.dart';
+import 'package:reddy/models/reddit/reddit_info_model.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:reddy/models/reddit/reddit_post_response.dart';

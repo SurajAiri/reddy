@@ -4,6 +4,7 @@ import 'package:reddy/controllers/general/home_controller.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/controllers/post/reddit_search_controller.dart';
 import 'package:reddy/views/features/general/screens/settings_screen.dart';
+import 'package:reddy/views/features/posts/screens/reddit_info_screen.dart';
 import 'package:reddy/views/features/posts/screens/search_screen.dart';
 
 import '../../views/features/general/screens/home_screen.dart';
@@ -16,6 +17,7 @@ class AllRoutes {
   // post
   static const postDetailsScreen = "/post";
   static const searchScreen = "/search";
+  static const redditInfo = '/reddit-info';
 
   static List<GetPage> routes = [
     // general
@@ -40,6 +42,11 @@ class AllRoutes {
         binding: BindingsBuilder(() {
       Get.put(RedditSearchController());
     })),
+
+    _buildGetPage(
+      redditInfo,
+      const RedditInfoScreen(),
+    ),
   ];
 
   static GetPage _buildGetPage(

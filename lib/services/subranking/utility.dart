@@ -1,9 +1,11 @@
+import 'package:webview_flutter/webview_flutter.dart';
 
 enum SubrankingType {
   largest,
   weekly,
   random,
 }
+
 enum SubrankingCategory {
   sfw,
   nsfw,
@@ -35,4 +37,12 @@ class SubrankingUtility {
         return "karma_friendly";
     }
   }
+}
+
+Future<String> getUserAgent() async {
+  final controller = WebViewController();
+
+  return await controller.runJavaScriptReturningResult(
+    'navigator.userAgent',
+  ) as String;
 }
