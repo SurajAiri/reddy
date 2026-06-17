@@ -153,9 +153,9 @@ class HomeController extends GetxController {
 
   void updateRedditInfo(RedditInfoModel info) {
     redditInfo = info;
-    // if (postCount.value < 1) {
-    //   _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
-    // }
+    if (postCount.value < 1) {
+      _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
+    }
   }
 
   void updateRedditCookie(String cookie) {
