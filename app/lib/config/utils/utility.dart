@@ -103,6 +103,30 @@ class Utility {
     };
   }
 
+  /// Reddit's comment sort query param uses `confidence` for what the
+  /// UI calls "best" - everything else matches the enum name.
+  static String encodeCommentSortType(CommentSortType sort) {
+    if (sort == CommentSortType.best) return 'confidence';
+    return sort.toString().split('.').last.replaceAll('_', '');
+  }
+
+  static String commentSortTypeDisplayName(CommentSortType sort) {
+    switch (sort) {
+      case CommentSortType.best:
+        return 'Best';
+      case CommentSortType.top:
+        return 'Top';
+      case CommentSortType.new_:
+        return 'New';
+      case CommentSortType.controversial:
+        return 'Controversial';
+      case CommentSortType.old:
+        return 'Old';
+      case CommentSortType.qa:
+        return 'Q&A';
+    }
+  }
+
   static String encodePostContentType(PostContentType type) {
     return switch (type) {
       PostContentType.image => "Image",

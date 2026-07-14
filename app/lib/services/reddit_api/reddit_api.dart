@@ -7,6 +7,7 @@ import 'package:reddy/config/utils/api_callback_listener.dart';
 import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/config/utils/utility.dart';
 import 'package:reddy/controllers/general/auth_controller.dart';
+import 'package:reddy/models/reddit/reddit_comment_model.dart';
 import 'package:reddy/models/reddit/reddit_info_model.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
 import 'package:http/http.dart' as http;
@@ -17,6 +18,7 @@ import 'reddit_endpoints.dart';
 
 part 'subreddit_post.dart';
 part 'fetch_user_details.dart';
+part 'post_comments.dart';
 
 class RedditApi {
   static Future<RedditPostResponse?> fetchSubredditPosts({
@@ -46,6 +48,18 @@ class RedditApi {
       query: query,
       before: before,
       after: after,
+      sortType: sortType,
+      limit: limit,
+    );
+  }
+
+  static Future<List<RedditCommentModel>?> fetchPostComments({
+    required String permalink,
+    CommentSortType sortType = CommentSortType.best,
+    int limit = 100,
+  }) async {
+    return _fetchPostComments(
+      permalink: permalink,
       sortType: sortType,
       limit: limit,
     );

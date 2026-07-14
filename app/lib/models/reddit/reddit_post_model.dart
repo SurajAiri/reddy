@@ -8,6 +8,7 @@ class RedditPostModel {
   late bool spoiler;
   late int ups;
   late int downs;
+  late int numComments;
   late DateTime created;
   late String id;
   late String title;
@@ -56,6 +57,7 @@ class RedditPostModel {
     required this.selftext,
     required this.ups,
     required this.downs,
+    this.numComments = 0,
     required this.permalink,
     required this.author,
     required this.subreddit,
@@ -81,6 +83,7 @@ class RedditPostModel {
       selftext = json['selftext'];
       ups = json['ups'];
       downs = json['downs'];
+      numComments = json['num_comments'] ?? 0;
       permalink = json['permalink'];
       author = json['author'];
       subreddit = json['subreddit'];
@@ -256,6 +259,7 @@ class RedditPostModel {
     data['selftext'] = selftext;
     data['ups'] = ups;
     data['downs'] = downs;
+    data['num_comments'] = numComments;
     data['permalink'] = permalink;
     data['author'] = author;
     data['subreddit'] = subreddit;
