@@ -1,7 +1,3 @@
-import 'dart:io';
-import 'dart:math';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reddy/config/routes/routes.dart';
@@ -35,119 +31,166 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
-  SafeArea _buildBody() {
-    return SafeArea(
-      child: Obx(
-        () => controller.isLoading.value
-            ? Center(
-                child: RedLottieAnim(path: AssetPaths.lottie.loading),
-              )
-            : ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  if (index < controller.posts.value!.posts.length) {
-                    return Obx(
-                      () => PostField(
-                        key: Key(controller.posts.value!.posts[index].id),
-                        post: controller.posts.value!.posts[index],
-                        safeContentOnly: controller.isSafeContentOnly.value,
-                        imageQuality: controller.imageQuality.value,
-                        postUrlPressed: () => controller.postLinkClicked(
-                            controller.posts.value!.posts[index].url),
-                      ),
-                    );
-                  }
-
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: controller.nextPage,
-                      child: const Text("Load More..."),
-                    ),
-                  );
-                },
-                itemCount: controller.postCount.value,
-              ),
-      ),
-    );
-  }
-
   Widget buildMainBody(BuildContext context) {
     return Column(
       children: [
         Expanded(
-          child: CustomScrollView(
-            controller: controller.postScrollController,
-            slivers: [
-              SliverAppBar(
-                backgroundColor: Colors.red[50],
-                bottom: PreferredSize(
-                  preferredSize: const Size(0, 30),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2.0),
-                    child: SingleChildScrollView(
-                      controller: controller.quickOptionScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: Obx(
-                        () => Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: List.generate(
-                            controller.quickOptions.length,
-                            (index) => QuickButton(
-                              isSelected: index == 0,
-                              title: controller.quickOptions.toList()[index],
-                              onPressed: controller.updateSubreddit,
+          child: RefreshIndicator(
+            onRefresh: controller.refresh,
+            child: CustomScrollView(
+              controller: controller.postScrollController,
+              // Needed so pull-to-refresh still works even when the
+              // feed is short enough to not fill the screen.
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  backgroundColor: Colors.red[50],
+                  bottom: PreferredSize(
+                    preferredSize: const Size(0, 30),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: SingleChildScrollView(
+                        controller: controller.quickOptionScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Obx(
+                          () => Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(
+                              controller.quickOptions.length,
+                              (index) => QuickButton(
+                                isSelected: index == 0,
+                                title:
+                                    controller.quickOptions.toList()[index],
+                                onPressed: controller.updateSubreddit,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                floating: true,
-                leading: InkWell(
-                  onTap: () {
-                    controller.scaffoldKey.currentState!.openDrawer();
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.asset(
-                      AssetPaths.img.logo,
-                      height: 32,
-                      fit: BoxFit.contain,
+                  floating: true,
+                  leading: InkWell(
+                    onTap: () {
+                      controller.scaffoldKey.currentState!.openDrawer();
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.asset(
+                        AssetPaths.img.logo,
+                        height: 32,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
-                ),
-                title: const Text(
-                  'Reddy',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w700,
+                  title: const Text(
+                    'Reddy',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                actions: [
-                  IconButton(
-                    onPressed: () {
-                      Get.toNamed(AllRoutes.searchScreen);
-                    },
-                    icon: const Icon(Icons.search),
-                  ),
-                  const SizedBox(width: 16),
-                ],
-              ),
-              SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    _buildBody(),
+                  actions: [
+                    IconButton(
+                      onPressed: () {
+                        Get.toNamed(AllRoutes.searchScreen);
+                      },
+                      icon: const Icon(Icons.search),
+                    ),
+                    const SizedBox(width: 16),
                   ],
                 ),
-              ),
-            ],
+                Obx(() {
+                  if (controller.isLoading.value && controller.posts.isEmpty) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: RedLottieAnim(path: AssetPaths.lottie.loading),
+                      ),
+                    );
+                  }
+
+                  if (controller.posts.isEmpty) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.inbox_outlined,
+                                size: 48, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            Text(
+                              "No posts found for r/${controller.currentSubreddit.value}",
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    sliver: SliverList.builder(
+                      // True lazy building: unlike the previous
+                      // ListView-inside-CustomScrollView setup, each
+                      // post is only built when it's about to become
+                      // visible, and this is what the scroll listener
+                      // in HomeController watches to auto-fetch more
+                      // pages (real infinite scroll instead of a
+                      // manual "Load more" button).
+                      itemCount:
+                          controller.posts.length + 1, // +1 = footer
+                      itemBuilder: (context, index) {
+                        if (index >= controller.posts.length) {
+                          return _buildFooter();
+                        }
+                        final post = controller.posts[index];
+                        return Obx(
+                          () => PostField(
+                            key: Key(post.id),
+                            post: post,
+                            safeContentOnly:
+                                controller.isSafeContentOnly.value,
+                            imageQuality: controller.imageQuality.value,
+                            postUrlPressed: () =>
+                                controller.postLinkClicked(post.url),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildFooter() {
+    return Obx(() {
+      if (controller.isLoadingMore.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      if (!controller.hasMore.value && controller.posts.isNotEmpty) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(
+            child: Text(
+              "You've reached the end",
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        );
+      }
+      return const SizedBox(height: 24);
+    });
   }
 }
 

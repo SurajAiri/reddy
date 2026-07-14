@@ -3,8 +3,16 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/config/utils/utility.dart';
+import 'package:reddy/controllers/general/auth_controller.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/views/features/general/widgets/red_dropdown.dart';
+
+String _formatDateTime(DateTime dt) {
+  final local = dt.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${local.year}-${two(local.month)}-${two(local.day)} '
+      '${two(local.hour)}:${two(local.minute)}';
+}
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -17,6 +25,45 @@ class SettingsScreen extends GetView<SettingsController> {
       ),
       body: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Account",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ),
+          Obx(() {
+            final lastLogin = Get.find<AuthController>().lastLoginAt;
+            return ListTile(
+              title: const Text(
+                'Reddit account',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+              ),
+              subtitle: Text(
+                lastLogin != null
+                    ? 'Last logged in: ${_formatDateTime(lastLogin)}'
+                    : 'Not logged in',
+                style: const TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+              trailing: TextButton.icon(
+                onPressed: () => Get.find<AuthController>()
+                    .goToLogin(forceAccountSwitch: true),
+                icon: const Icon(Icons.login, size: 18),
+                label: const Text('Re-authenticate'),
+              ),
+            );
+          }),
+          const Divider(height: 24),
           ListTile(
             title: const Text(
               'Safe Content Only',

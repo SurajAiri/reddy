@@ -12,19 +12,32 @@ class ApiCallHandler {
     http.Response response, {
     ApiCallListener? listener,
   }) {
-    bool res = false;
-    var json = jsonDecode(response.body);
     if (response.statusCode < 400) {
       // success
       _call(listener);
-      res = true;
-    } else if (response.statusCode == 401) {
-      // login token expire
-      _call(listener, error: "Token expired");
-    } else {
-      _call(listener, error: json['message']);
+      return true;
     }
-    return res;
+
+    if (response.statusCode == 401) {
+      // Session expired - handled centrally by AuthController before
+      // we ever get here, so just report failure quietly.
+      _call(listener, error: "Token expired");
+      return false;
+    }
+
+    // Error bodies aren't guaranteed to be valid JSON (Reddit can
+    // return HTML error pages, e.g. for 5xx/ratelimit responses), so
+    // guard the decode instead of letting it throw.
+    String? message;
+    try {
+      final json = jsonDecode(response.body);
+      message = json is Map ? json['message']?.toString() : null;
+    } catch (_) {
+      // not JSON - fall through with a generic message below
+    }
+    _call(listener,
+        error: message ?? "Request failed (${response.statusCode})");
+    return false;
   }
 
   static void _call(ApiCallListener? listener, {String? error}) {

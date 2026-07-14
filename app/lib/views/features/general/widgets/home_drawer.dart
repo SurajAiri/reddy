@@ -7,6 +7,7 @@ import 'package:reddy/config/utils/asset_paths.dart';
 import 'package:reddy/config/utils/constants.dart';
 import 'package:reddy/config/utils/ui_utility.dart';
 import 'package:reddy/config/utils/utility.dart';
+import 'package:reddy/controllers/general/auth_controller.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/views/features/general/widgets/drawer_element.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -113,6 +114,14 @@ class HomeDrawer extends StatelessWidget {
             onPressed: () {
               Get.back();
               Get.toNamed(AllRoutes.settingsScreen);
+            },
+          ),
+          DrawerElement(
+            title: "Re-authenticate",
+            iconData: Icons.login,
+            onPressed: () {
+              Get.back();
+              Get.find<AuthController>().goToLogin(forceAccountSwitch: true);
             },
           ),
           DrawerElement(

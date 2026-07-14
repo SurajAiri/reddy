@@ -1,39 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_rx/get_rx.dart';
 import 'package:reddy/config/utils/enums.dart';
-import 'package:reddy/config/utils/ui_utility.dart';
+import 'package:reddy/controllers/general/auth_controller.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
-import 'package:reddy/models/reddit/reddit_info_model.dart';
-import 'package:reddy/models/reddit/reddit_post_response.dart';
 import 'package:reddy/services/reddit_api/reddit_api.dart';
 
 import '../../models/reddit/reddit_post_model.dart';
-import 'package:http/http.dart' as http;
 
 class HomeController extends GetxController {
   final settings = Get.find<SettingsController>();
+  final auth = Get.find<AuthController>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  /// Spinner for the very first load of a subreddit (or a pull-to-refresh).
   RxBool isLoading = false.obs;
+
+  /// Spinner shown at the bottom of the feed while fetching the next page.
+  RxBool isLoadingMore = false.obs;
+
+  /// Whether there's a next page left to fetch (`after` token from Reddit).
+  RxBool hasMore = true.obs;
 
   Rx<ImageQuality> get imageQuality => settings.imageQuality;
   Rx<bool> get isSafeContentOnly => settings.isSafeContentOnly;
 
-  Rxn<RedditPostResponse> posts =
-      Rxn<RedditPostResponse>(RedditPostResponse(subreddit: "memes"));
-  RxInt get postCount => (posts.value == null
-          ? 0
-          : posts.value!.after == null
-              ? posts.value!.posts.length
-              : posts.value!.posts.length + 1)
-      .obs;
-  RedditInfoModel? redditInfo;
-  RedditInfoModel? get getRedditInfo => redditInfo;
+  RxString currentSubreddit = 'memes'.obs;
+
+  /// The actual, growing list of posts backing the feed. Unlike the
+  /// previous implementation - which replaced this list wholesale on
+  /// every "next page" fetch (so scrolling further actually *lost*
+  /// the posts you'd already loaded) - pages are now appended here,
+  /// which is what makes real infinite scroll possible.
+  RxList<RedditPostModel> posts = <RedditPostModel>[].obs;
+
+  final Set<String> _seenPostIds = {};
+  String? _after;
 
   final postScrollController = ScrollController();
   final quickOptionScrollController = ScrollController();
 
-// quick button
+  // quick button
   RxList<String> quickOptions = [
     'memes',
     'dankmemes',
@@ -58,55 +64,97 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    if (redditInfo == null) return;
-    _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
+    postScrollController.addListener(_onScroll);
+    if (!auth.isLoggedIn) return;
+    _fetchPosts(subreddit: currentSubreddit.value, reset: true);
   }
 
   @override
-  void onReady() {
-    super.onReady();
-    if (redditInfo == null) {
-      Get.toNamed('/reddit-info');
+  void onClose() {
+    postScrollController.removeListener(_onScroll);
+    postScrollController.dispose();
+    quickOptionScrollController.dispose();
+    super.onClose();
+  }
+
+  /// Auto-loads the next page once the user scrolls near the bottom -
+  /// this is the actual infinite-scroll behaviour; there used to be no
+  /// scroll listener at all, only a manual "Load more" button, and
+  /// even that replaced the list instead of appending to it.
+  void _onScroll() {
+    if (!postScrollController.hasClients) return;
+    final position = postScrollController.position;
+    const threshold = 800.0;
+    if (position.pixels >= position.maxScrollExtent - threshold) {
+      nextPage();
     }
   }
 
   void updateSubreddit(String newSubreddit) {
-    if (newSubreddit == posts.value?.subreddit) return;
+    if (newSubreddit == currentSubreddit.value) return;
     _quickOptionPressed(newSubreddit);
-    posts.value?.subreddit = newSubreddit;
-    _fetchPosts(subreddit: newSubreddit);
+    currentSubreddit.value = newSubreddit;
+    _fetchPosts(subreddit: newSubreddit, reset: true);
   }
 
   void nextPage() {
-    if (posts.value?.after != null) {
-      _fetchPosts(subreddit: posts.value?.subreddit ?? "memes", direction: 1);
-    }
+    if (isLoading.value || isLoadingMore.value || !hasMore.value) return;
+    _fetchPosts(subreddit: currentSubreddit.value, reset: false);
+  }
+
+  /// Pull-to-refresh: reloads the current subreddit from the top.
+  Future<void> refresh() async {
+    await _fetchPosts(subreddit: currentSubreddit.value, reset: true);
   }
 
   void tempFilter() {
     // allow only gifs
-    posts.value?.posts
-        .removeWhere((post) => post.contentType != PostContentType.video);
-    // print(posts.length);
+    posts.removeWhere((post) => post.contentType != PostContentType.video);
   }
 
-  /// `direction` -1 for previous, 1 for next, 0 for reload
-  void _fetchPosts({
+  Future<void> _fetchPosts({
     required String subreddit,
-    int direction = 0,
+    required bool reset,
   }) async {
-    isLoading.value = true;
-    print("calling fetch reddit posts");
-    // Fetch posts
-    posts.value = await RedditApi.fetchSubredditPosts(
-      subreddit: posts.value?.subreddit ?? 'memes',
-      after: direction == 1 ? posts.value?.after : null,
-      before: direction == -1 ? posts.value?.before : null,
-      sortType: RedditSortType.new_,
-    );
-    // tempFilter();
-    print("total Post length: ${posts.value?.posts.length}");
-    isLoading.value = false;
+    if (reset) {
+      isLoading.value = true;
+      _after = null;
+      hasMore.value = true;
+      _seenPostIds.clear();
+      posts.clear();
+    } else {
+      isLoadingMore.value = true;
+    }
+
+    try {
+      final response = await RedditApi.fetchSubredditPosts(
+        subreddit: subreddit,
+        after: _after,
+        sortType: RedditSortType.new_,
+      );
+
+      if (response == null) {
+        // Either a network hiccup or session expiry (handled by
+        // AuthController itself, which will already have redirected
+        // to the login screen in that case).
+        return;
+      }
+
+      // Reddit's `after` cursor can occasionally hand back a post we
+      // already have (e.g. right after new posts land), so de-dupe by
+      // id instead of blindly appending - avoids duplicate widgets /
+      // duplicate GlobalKeys further down the tree.
+      final freshPosts = response.posts
+          .where((p) => _seenPostIds.add(p.id))
+          .toList(growable: false);
+
+      posts.addAll(freshPosts);
+      _after = response.after;
+      hasMore.value = response.after != null && response.posts.isNotEmpty;
+    } finally {
+      isLoading.value = false;
+      isLoadingMore.value = false;
+    }
   }
 
   void postLinkClicked(String url) {
@@ -134,31 +182,21 @@ class HomeController extends GetxController {
 
   // quick option pressed
   void _quickOptionPressed(String subreddit) {
-    if (subreddit == posts.value?.subreddit) return;
-    // remove the subreddit from the list and insert it at the top if exists if there are more than 10 pop last one and insert at the top
-    print("new subreddit $subreddit");
+    if (subreddit == currentSubreddit.value) return;
+    // remove the subreddit from the list and insert it at the top if exists
+    // if there are more than 10 pop last one and insert at the top
     if (quickOptions.contains(subreddit)) {
       quickOptions.remove(subreddit);
     } else if (quickOptions.length >= 10) {
       quickOptions.removeLast();
     }
     quickOptions.insert(0, subreddit);
-    quickOptionScrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.bounceInOut,
-    );
-    print("quick options: $quickOptions");
-  }
-
-  void updateRedditInfo(RedditInfoModel info) {
-    redditInfo = info;
-    if (postCount.value < 1) {
-      _fetchPosts(subreddit: posts.value?.subreddit ?? 'memes');
+    if (quickOptionScrollController.hasClients) {
+      quickOptionScrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.bounceInOut,
+      );
     }
-  }
-
-  void updateRedditCookie(String cookie) {
-    redditInfo?.cookies = cookie;
   }
 }
