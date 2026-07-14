@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reddy/config/routes/routes.dart';
 import 'package:reddy/config/utils/asset_paths.dart';
+import 'package:reddy/config/utils/enums.dart';
+import 'package:reddy/config/utils/utility.dart';
 import 'package:reddy/controllers/general/home_controller.dart';
 import 'package:reddy/views/features/general/widgets/post_field.dart';
 import 'package:reddy/views/widgets/red_lottie_anim.dart';
@@ -83,14 +85,18 @@ class HomeScreen extends GetView<HomeController> {
                       ),
                     ),
                   ),
-                  title: const Text(
-                    'Reddy',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w700,
+                  title: Obx(
+                    () => Text(
+                      controller.feedTitle,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   actions: [
+                    _buildSortButton(),
                     IconButton(
                       onPressed: () {
                         Get.toNamed(AllRoutes.searchScreen);
@@ -121,7 +127,7 @@ class HomeScreen extends GetView<HomeController> {
                                 size: 48, color: Colors.grey),
                             const SizedBox(height: 8),
                             Text(
-                              "No posts found for r/${controller.currentSubreddit.value}",
+                              "No posts found for ${controller.feedTitle}",
                               style: const TextStyle(color: Colors.grey),
                             ),
                           ],
@@ -167,6 +173,59 @@ class HomeScreen extends GetView<HomeController> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSortButton() {
+    const sortOptions = [
+      RedditSortType.best,
+      RedditSortType.hot,
+      RedditSortType.new_,
+      RedditSortType.top,
+      RedditSortType.rising,
+    ];
+
+    return Obx(
+      () => PopupMenuButton<RedditSortType>(
+        tooltip: 'Sort by',
+        initialValue: controller.currentSort.value,
+        onSelected: controller.changeSort,
+        itemBuilder: (context) => sortOptions
+            .map(
+              (sort) => PopupMenuItem(
+                value: sort,
+                child: Row(
+                  children: [
+                    Icon(
+                      Utility.sortTypeIcon(sort),
+                      size: 18,
+                      color: sort == controller.currentSort.value
+                          ? Colors.red[300]
+                          : Colors.black54,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(Utility.sortTypeDisplayName(sort)),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Utility.sortTypeIcon(controller.currentSort.value),
+                size: 20,
+                color: Colors.black87,
+              ),
+              const SizedBox(width: 2),
+              const Icon(Icons.arrow_drop_down, color: Colors.black87),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

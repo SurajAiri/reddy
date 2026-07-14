@@ -31,6 +31,66 @@ class Utility {
     return sort.toString().split('.').last.replaceAll("_", "");
   }
 
+  /// Reddit only exposes a `best` listing on the aggregated home/all
+  /// feed, not on individual subreddits (`/r/<sub>/best.json` 404s),
+  /// so when browsing a specific subreddit we fall back to `hot`,
+  /// which is the closest equivalent.
+  static String encodeRedditSortTypeForSubreddit(RedditSortType sort) {
+    if (sort == RedditSortType.best) {
+      return encodeRedditSortType(RedditSortType.hot);
+    }
+    return encodeRedditSortType(sort);
+  }
+
+  /// Reddit's search endpoint (`/search.json`) only accepts
+  /// `relevance | hot | top | new | comments` for its `sort` param -
+  /// it has no `best` or `rising` option - so map those onto the
+  /// closest equivalent instead of sending an invalid value.
+  static String encodeRedditSortTypeForSearch(RedditSortType sort) {
+    switch (sort) {
+      case RedditSortType.best:
+        return 'relevance';
+      case RedditSortType.rising:
+        return encodeRedditSortType(RedditSortType.new_);
+      default:
+        return encodeRedditSortType(sort);
+    }
+  }
+
+  static String sortTypeDisplayName(RedditSortType sort) {
+    switch (sort) {
+      case RedditSortType.best:
+        return 'Best';
+      case RedditSortType.hot:
+        return 'Hot';
+      case RedditSortType.new_:
+        return 'New';
+      case RedditSortType.top:
+        return 'Top';
+      case RedditSortType.rising:
+        return 'Rising';
+      case RedditSortType.controversial:
+        return 'Controversial';
+    }
+  }
+
+  static IconData sortTypeIcon(RedditSortType sort) {
+    switch (sort) {
+      case RedditSortType.best:
+        return Icons.auto_awesome;
+      case RedditSortType.hot:
+        return Icons.local_fire_department;
+      case RedditSortType.new_:
+        return Icons.fiber_new;
+      case RedditSortType.top:
+        return Icons.trending_up;
+      case RedditSortType.rising:
+        return Icons.rocket_launch;
+      case RedditSortType.controversial:
+        return Icons.bolt;
+    }
+  }
+
   static String encodeImageQuality(ImageQuality quality) {
     return switch (quality) {
       ImageQuality.lowest => "Lowest",

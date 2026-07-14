@@ -35,6 +35,22 @@ class RedditApi {
     );
   }
 
+  static Future<RedditPostResponse?> fetchSearchPosts({
+    required String query,
+    String? before,
+    String? after,
+    RedditSortType sortType = RedditSortType.best,
+    int limit = 25,
+  }) async {
+    return _fetchSearchPosts(
+      query: query,
+      before: before,
+      after: after,
+      sortType: sortType,
+      limit: limit,
+    );
+  }
+
   static Future<bool> checkIfSubredditExist(String subreddit) async {
     return _checkIfSubredditExist(subreddit);
   }

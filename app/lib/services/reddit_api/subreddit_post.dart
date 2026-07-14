@@ -78,7 +78,7 @@ Future<RedditPostResponse?> _fetchSubredditPosts({
 
     Uri uri = Uri.https(
       'www.reddit.com',
-      '/r/$subreddit/${Utility.encodeRedditSortType(sortType)}.json',
+      '/r/$subreddit/${Utility.encodeRedditSortTypeForSubreddit(sortType)}.json',
       params,
     );
 
@@ -100,6 +100,65 @@ Future<RedditPostResponse?> _fetchSubredditPosts({
     return RedditPostResponse.fromJson(subreddit: subreddit, json: data);
   } catch (e) {
     debugPrint("fetchSubredditPosts error: $e");
+  }
+  return null;
+}
+
+/// Site-wide reddit search (as opposed to browsing a single
+/// subreddit's listing) - hits `/search.json` so it can surface
+/// posts from anywhere on reddit that match [query].
+Future<RedditPostResponse?> _fetchSearchPosts({
+  required String query,
+  String? before,
+  String? after,
+  RedditSortType sortType = RedditSortType.best,
+  int limit = 25,
+  ApiCallListener? listener,
+}) async {
+  final info = _requireRedditInfo();
+
+  try {
+    var params = {
+      'q': query,
+      'limit': '$limit',
+      'raw_json': '1',
+      'type': 'link',
+      'sort': Utility.encodeRedditSortTypeForSearch(sortType),
+    };
+    if (after != null) {
+      params['after'] = after;
+    } else if (before != null) {
+      params['before'] = before;
+    }
+
+    Uri uri = Uri.https(
+      'www.reddit.com',
+      '/search.json',
+      params,
+    );
+
+    http.Response response = await http.get(
+      uri,
+      headers: {
+        'User-Agent': info.ua ?? "",
+        'Cookie': info.cookies ?? "",
+        "Accept": '*/*'
+      },
+    );
+
+    if (_handleAuthSideEffects(response, info)) return null;
+
+    if (!ApiCallHandler.handleApiResponse(response, listener: listener)) {
+      return null;
+    }
+    final data = jsonDecode(response.body);
+    // Search results span many subreddits, so there's no single
+    // subreddit to label the response with - each post already
+    // carries its own `subreddit` field for display. We store the
+    // query itself here purely for debugging/logging purposes.
+    return RedditPostResponse.fromJson(subreddit: query, json: data);
+  } catch (e) {
+    debugPrint("fetchSearchPosts error: $e");
   }
   return null;
 }

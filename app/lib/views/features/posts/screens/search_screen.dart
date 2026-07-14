@@ -21,7 +21,7 @@ class SearchScreen extends GetView<RedditSearchController> {
         title: Obx(
           () => SearchField(
             focusNode: controller.searchFocusNode,
-            hintText: "Enter Subreddit",
+            hintText: "Search reddit, or r/subreddit",
             controller: controller.searchController,
             onEditingComplete: controller.validateSearch,
             enabled: !controller.isValidating.value && !controller.isLoadingApiData.value,
@@ -91,6 +91,13 @@ class SearchScreen extends GetView<RedditSearchController> {
               )
             : Column(
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      "Tip: type r/name to jump to a subreddit, or just type a word to search all of reddit for it.",
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ),
                   _buildSearchModeSelector(),
                   if (controller.isApiMode) _buildApiControls(),
                   Expanded(

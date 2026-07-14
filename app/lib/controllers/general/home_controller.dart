@@ -26,6 +26,18 @@ class HomeController extends GetxController {
 
   RxString currentSubreddit = 'memes'.obs;
 
+  /// Whether the feed is currently a site-wide reddit search (`query`)
+  /// instead of a specific subreddit's listing.
+  RxBool isSearchMode = false.obs;
+  RxString currentQuery = ''.obs;
+
+  /// Sort applied to whichever feed is active (subreddit or search).
+  Rx<RedditSortType> currentSort = RedditSortType.new_.obs;
+
+  /// What the app bar / empty-state should show for the active feed.
+  String get feedTitle =>
+      isSearchMode.value ? '"${currentQuery.value}"' : 'r/${currentSubreddit.value}';
+
   /// The actual, growing list of posts backing the feed. Unlike the
   /// previous implementation - which replaced this list wholesale on
   /// every "next page" fetch (so scrolling further actually *lost*
@@ -66,7 +78,7 @@ class HomeController extends GetxController {
     super.onInit();
     postScrollController.addListener(_onScroll);
     if (!auth.isLoggedIn) return;
-    _fetchPosts(subreddit: currentSubreddit.value, reset: true);
+    _fetchPosts(reset: true);
   }
 
   @override
@@ -91,20 +103,41 @@ class HomeController extends GetxController {
   }
 
   void updateSubreddit(String newSubreddit) {
-    if (newSubreddit == currentSubreddit.value) return;
+    // Skip the no-op guard while in search mode - we still need to
+    // switch back to the subreddit feed even if it happens to match
+    // the subreddit we were on before the search.
+    if (!isSearchMode.value && newSubreddit == currentSubreddit.value) return;
+    isSearchMode.value = false;
     _quickOptionPressed(newSubreddit);
     currentSubreddit.value = newSubreddit;
-    _fetchPosts(subreddit: newSubreddit, reset: true);
+    _fetchPosts(reset: true);
+  }
+
+  /// Runs a site-wide reddit search (as opposed to browsing a single
+  /// subreddit) for [query] and loads it as the active feed.
+  void updateSearchQuery(String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+    isSearchMode.value = true;
+    currentQuery.value = trimmed;
+    _fetchPosts(reset: true);
+  }
+
+  /// Re-fetches the active feed (subreddit or search) with a new sort.
+  void changeSort(RedditSortType sort) {
+    if (sort == currentSort.value) return;
+    currentSort.value = sort;
+    _fetchPosts(reset: true);
   }
 
   void nextPage() {
     if (isLoading.value || isLoadingMore.value || !hasMore.value) return;
-    _fetchPosts(subreddit: currentSubreddit.value, reset: false);
+    _fetchPosts(reset: false);
   }
 
-  /// Pull-to-refresh: reloads the current subreddit from the top.
+  /// Pull-to-refresh: reloads the active feed from the top.
   Future<void> refresh() async {
-    await _fetchPosts(subreddit: currentSubreddit.value, reset: true);
+    await _fetchPosts(reset: true);
   }
 
   void tempFilter() {
@@ -113,7 +146,6 @@ class HomeController extends GetxController {
   }
 
   Future<void> _fetchPosts({
-    required String subreddit,
     required bool reset,
   }) async {
     if (reset) {
@@ -127,11 +159,17 @@ class HomeController extends GetxController {
     }
 
     try {
-      final response = await RedditApi.fetchSubredditPosts(
-        subreddit: subreddit,
-        after: _after,
-        sortType: RedditSortType.new_,
-      );
+      final response = isSearchMode.value
+          ? await RedditApi.fetchSearchPosts(
+              query: currentQuery.value,
+              after: _after,
+              sortType: currentSort.value,
+            )
+          : await RedditApi.fetchSubredditPosts(
+              subreddit: currentSubreddit.value,
+              after: _after,
+              sortType: currentSort.value,
+            );
 
       if (response == null) {
         // Either a network hiccup or session expiry (handled by

@@ -82,17 +82,32 @@ class RedditSearchController extends GetxController {
 
   }
 
+  /// `r/<name>` (any amount of internal whitespace is stripped, since
+  /// subreddit names can't contain spaces) is treated as a direct jump
+  /// to that subreddit, exactly like before. Anything else is treated
+  /// as a normal, site-wide reddit search query instead.
   void validateSearch() async {
     if (searchTextLength.value < 3) return;
-    isValidating.value = true;
 
-    String subredditName = searchController.text.trim();
+    String rawText = searchController.text.trim();
 
-    // Remove 'r/' prefix if present
-    if (subredditName.startsWith('r/')) {
-      subredditName = subredditName.substring(2);
+    if (_isSubredditQuery(rawText)) {
+      String subredditName = _extractSubredditName(rawText);
+      if (subredditName.length < 3) return;
+      await _navigateToSubreddit(subredditName);
+    } else {
+      Get.back();
+      Get.find<HomeController>().updateSearchQuery(rawText);
     }
+  }
 
+  bool _isSubredditQuery(String text) => text.toLowerCase().startsWith('r/');
+
+  String _extractSubredditName(String text) =>
+      text.substring(2).replaceAll(RegExp(r'\s+'), '');
+
+  Future<void> _navigateToSubreddit(String subredditName) async {
+    isValidating.value = true;
     bool isValid = await RedditApi.checkIfSubredditExist(subredditName);
     isValidating.value = false;
 
@@ -215,7 +230,7 @@ class RedditSearchController extends GetxController {
     }
 
     searchController.text = subredditName;
-    validateSearch();
+    _navigateToSubreddit(subredditName);
   }
 
   void toggleSuggestSFW() {

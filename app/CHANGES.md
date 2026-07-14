@@ -39,3 +39,12 @@
 ## Suggested next steps
 - Consider adding refresh-token style silent re-auth (headless WebView ping) before a session fully expires, instead of only reacting to 401s.
 - Gallery carousel currently always loads the full-resolution image per item; could add per-image quality-tier selection like single-image posts already have.
+
+## New: site-wide reddit search + sort-by (Best/Hot/New/Top/Rising)
+
+- **Search box now understands two kinds of input:**
+  - `r/<name>` (spaces are stripped, e.g. `r/ mild lyinteresting` → `mildlyinteresting`) jumps straight to that subreddit, exactly like before — all the existing local/API subreddit suggestion lists still work unchanged (tapping a suggestion always goes straight to that subreddit, regardless of prefix).
+  - Anything else is run as a normal, site-wide reddit search (`/search.json`) and shown as a feed, the same way a subreddit's feed is — infinite scroll, pull-to-refresh, and post cards all work identically. Each post still shows which subreddit it came from since search results span many subreddits.
+- **Sort-by menu** added to the home app bar (next to the search icon): **Best, Hot, New, Top, Rising**. Applies to whichever feed is active (a subreddit or a search) and re-fetches from the top when changed.
+  - Reddit doesn't actually expose a `best` listing for individual subreddits (only the aggregated home/all feed) or a `rising`/`best` option on `/search.json`, so those are transparently mapped to their closest equivalent (`hot` / `relevance` / `new`) per-endpoint under the hood — the UI options stay the same either way.
+- The app bar title and the "no posts found" empty state now reflect whatever's actually being browsed (`r/subreddit` or `"search query"`).
