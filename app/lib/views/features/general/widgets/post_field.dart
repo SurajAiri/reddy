@@ -5,9 +5,12 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:reddy/config/routes/routes.dart';
 import 'package:reddy/config/utils/constants.dart';
 import 'package:reddy/config/utils/enums.dart';
 import 'package:reddy/config/utils/ui_utility.dart';
+import 'package:reddy/config/utils/utility.dart';
+import 'package:reddy/controllers/general/home_controller.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/models/reddit/reddit_post_model.dart';
 import 'package:reddy/models/reddit/reddit_user_model.dart';
@@ -32,6 +35,19 @@ class PostField extends StatelessWidget {
 
   /// called when there is no media to show but PostContentType is not text
   final Function()? postUrlPressed;
+
+  /// Switches the home feed to [subreddit] and pops back to the home
+  /// route if we're stacked on top of it (e.g. tapped from inside
+  /// SinglePostScreen). There's no separate "subreddit screen" in
+  /// this app - HomeController's feed IS the subreddit page, it just
+  /// gets reconfigured in place.
+  void _openSubreddit(String subreddit) {
+    if (Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().updateSubreddit(subreddit);
+    }
+    Get.until((route) =>
+        route.settings.name == AllRoutes.homeScreen || route.isFirst);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,11 +96,16 @@ class PostField extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Text(
-                                "r/${post.subreddit}",
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
+                              InkWell(
+                                borderRadius: BorderRadius.circular(4),
+                                onTap: () => _openSubreddit(post.subreddit),
+                                child: Text(
+                                  "r/${post.subreddit}",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.blue[700],
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -161,25 +182,44 @@ class PostField extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 4),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _PostButton(
-                  icon: Icons.thumb_up,
-                  text: post.ups.toString(),
+                // Reddit combines up/downvotes into a single net score
+                // and shows it as arrow-score-arrow, not two separate
+                // counters - `downs` is basically always 0 on modern
+                // reddit anyway (they stopped exposing real downvote
+                // counts years ago), so treating it as a second
+                // meaningful number was misleading.
+                _VoteScore(score: post.ups - post.downs),
+                Expanded(
+                  child: Center(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: isSinglePost
+                          ? null
+                          : () => Get.to(SinglePostScreen(post: post)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        child: _PostButton(
+                          icon: Icons.mode_comment_outlined,
+                          text: Utility.compactNumber(post.numComments),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                _PostButton(
-                  icon: Icons.thumb_down,
-                  text: post.downs.toString(),
-                ),
-                const SizedBox(width: 8),
                 InkWell(
+                  borderRadius: BorderRadius.circular(6),
                   onTap: () {
                     UiUtility.showToast("Yet to add share post");
                   },
-                  child: _PostButton(
-                    icon: Icons.share,
-                    text: "Share",
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    child: _PostButton(
+                      icon: Icons.share_outlined,
+                      text: "Share",
+                    ),
                   ),
                 ),
               ],
@@ -410,6 +450,52 @@ class _GalleryCarouselState extends State<_GalleryCarousel> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Reddit's actual vote widget: up arrow, net score, down arrow, all
+/// in one pill. No vote-casting is wired up here (this app never
+/// authenticates a vote action against reddit's API) so both arrows
+/// are static/decorative for now - this only fixes the *display*,
+/// which is what was asked for. Score colour hints at sign without
+/// needing to track the viewer's own vote state, which isn't
+/// available.
+class _VoteScore extends StatelessWidget {
+  const _VoteScore({required this.score});
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = score > 0
+        ? Colors.deepOrange
+        : score < 0
+            ? Colors.blue
+            : Colors.grey[700];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.arrow_upward_rounded, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(
+            Utility.compactNumber(score),
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.arrow_downward_rounded, size: 16, color: Colors.grey[500]),
         ],
       ),
     );

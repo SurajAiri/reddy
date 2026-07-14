@@ -3,6 +3,15 @@ import 'package:intl/intl.dart';
 import 'package:reddy/config/utils/enums.dart';
 
 class Utility {
+  /// Reddit-style compact vote/comment counts: 950, 1.2k, 34k, 1.1m.
+  /// `NumberFormat.compact()` alone gives "1.2K" (capital K, and no
+  /// special-casing below 1000) - lowercased here to match Reddit's
+  /// own formatting instead of introducing an inconsistent style.
+  static String compactNumber(int value) {
+    if (value.abs() < 1000) return value.toString();
+    return NumberFormat.compact().format(value).toLowerCase();
+  }
+
   static String encodeDate(DateTime? value) {
     if (value == null) return "DD / MM / YYYY";
     return DateFormat('dd / MM / yyyy').format(value);

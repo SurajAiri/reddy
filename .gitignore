@@ -274,6 +274,7 @@ artifact/
 *.pptx
 *.mp3
 *.wav
+*.zip
 
 references/
 reference/
