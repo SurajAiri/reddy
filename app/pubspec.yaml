@@ -34,6 +34,7 @@ dependencies:
   video_player: ^2.8.1
   chewie: ^1.7.4
   cached_network_image: ^3.3.0
+  flutter_markdown_plus: ^1.0.6
   win32: ^6.3.0
   archive: ^4.0.9
   wakelock_plus: ^1.6.1

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reddy/config/utils/enums.dart';
+import 'package:reddy/config/utils/link_handler.dart';
 import 'package:reddy/controllers/general/auth_controller.dart';
 import 'package:reddy/controllers/general/settings_controller.dart';
 import 'package:reddy/services/reddit_api/reddit_api.dart';
@@ -195,22 +196,12 @@ class HomeController extends GetxController {
     }
   }
 
+  /// Previously this only handled reddit-internal links (subreddit
+  /// switch) and silently did nothing for anything else - tapping a
+  /// link post's URL button for a non-reddit link was a dead button.
+  /// LinkHandler now covers both cases.
   void postLinkClicked(String url) {
-    var sr = _parseSubredditName(url);
-    if (sr.isNotEmpty) {
-      updateSubreddit(sr);
-    }
-  }
-
-  String _parseSubredditName(String url) {
-    // Regular expression pattern to match the subreddit name part in the URL
-    RegExp regex = RegExp(r"https?://(?:www\.)?reddit\.com/r/([A-Za-z0-9_]+)");
-    Match? match = regex.firstMatch(url);
-    if (match != null) {
-      return match.group(1)!;
-    } else {
-      return ""; // or null, depending on how you handle invalid URLs
-    }
+    LinkHandler.open(url);
   }
 
   void floatingButtonAction() async {

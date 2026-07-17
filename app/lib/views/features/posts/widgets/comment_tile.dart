@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:get/get.dart';
+import 'package:reddy/config/utils/link_handler.dart';
 import 'package:reddy/controllers/post/post_detail_controller.dart';
 import 'package:reddy/models/reddit/reddit_comment_model.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -79,7 +81,7 @@ class CommentTile extends StatelessWidget {
           ),
           if (!collapsed) ...[
             const SizedBox(height: 4),
-            _buildContent(),
+            _buildContent(context),
             for (final reply in comment.replies)
               CommentTile(comment: reply, controller: controller),
           ] else
@@ -101,9 +103,18 @@ class CommentTile extends StatelessWidget {
   }
 
   /// Body split into text/gif parts - see [RedditCommentModel.bodyParts].
-  Widget _buildContent() {
+  /// Text parts are markdown source (bold, italics, links, etc.) -
+  /// previously rendered with a plain `Text()`, so e.g. `[link](url)`
+  /// showed up as the literal characters `[link](url)` instead of a
+  /// tappable link. `MarkdownBody` actually parses it.
+  Widget _buildContent(BuildContext context) {
     final parts = comment.bodyParts;
     if (parts.isEmpty) return const SizedBox.shrink();
+
+    final styleSheet = MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+      p: const TextStyle(fontSize: 14, height: 1.35, color: Color(0xFF1A1A1A)),
+      a: TextStyle(color: Colors.blue[700], decoration: TextDecoration.underline),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,13 +124,14 @@ class CommentTile extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 4),
             child: part.type == CommentBodyPartType.gif
                 ? _CommentGif(url: part.gifUrl!)
-                : Text(
-                    part.text,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.35,
-                      color: Color(0xFF1A1A1A),
-                    ),
+                : MarkdownBody(
+                    data: part.text,
+                    selectable: false,
+                    softLineBreak: true,
+                    styleSheet: styleSheet,
+                    onTapLink: (text, href, title) {
+                      if (href != null) LinkHandler.open(href);
+                    },
                   ),
           ),
       ],

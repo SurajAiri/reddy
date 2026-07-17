@@ -3,6 +3,18 @@ import 'package:intl/intl.dart';
 import 'package:reddy/config/utils/enums.dart';
 
 class Utility {
+  static final RegExp _subredditUrlPattern =
+      RegExp(r"https?://(?:www\.)?reddit\.com/r/([A-Za-z0-9_]+)");
+
+  /// Extracts `xyz` from a `reddit.com/r/xyz...` URL, or `""` if the
+  /// URL isn't a subreddit link (self-post permalinks, user profiles,
+  /// other domains entirely, etc). Shared between HomeController and
+  /// LinkHandler so there's exactly one place that knows this regex.
+  static String parseSubredditFromUrl(String url) {
+    final match = _subredditUrlPattern.firstMatch(url);
+    return match?.group(1) ?? '';
+  }
+
   /// Reddit-style compact vote/comment counts: 950, 1.2k, 34k, 1.1m.
   /// `NumberFormat.compact()` alone gives "1.2K" (capital K, and no
   /// special-casing below 1000) - lowercased here to match Reddit's

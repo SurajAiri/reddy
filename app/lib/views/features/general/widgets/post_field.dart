@@ -4,10 +4,12 @@ import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:get/get.dart';
 import 'package:reddy/config/routes/routes.dart';
 import 'package:reddy/config/utils/constants.dart';
 import 'package:reddy/config/utils/enums.dart';
+import 'package:reddy/config/utils/link_handler.dart';
 import 'package:reddy/config/utils/ui_utility.dart';
 import 'package:reddy/config/utils/utility.dart';
 import 'package:reddy/controllers/general/home_controller.dart';
@@ -162,7 +164,7 @@ class PostField extends StatelessWidget {
                 post.previews.isEmpty &&
                 post.contentType != PostContentType.text)
               TextButton(
-                onPressed: postUrlPressed,
+                onPressed: postUrlPressed ?? () => LinkHandler.open(post.url),
                 child: Text(post.url),
               )
             else if ((post.contentType == PostContentType.video ||
@@ -172,11 +174,16 @@ class PostField extends StatelessWidget {
             else if (post.previews.isNotEmpty)
               buildImagePart(context)
             else if (post.contentType == PostContentType.text)
-              Text(
-                post.selftext,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
+              MarkdownBody(
+                data: post.selftext,
+                selectable: false,
+                softLineBreak: true,
+                onTapLink: (text, href, title) {
+                  if (href != null) LinkHandler.open(href);
+                },
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                  p: const TextStyle(color: Colors.grey, fontSize: 14, height: 1.35),
+                  a: TextStyle(color: Colors.blue[700], decoration: TextDecoration.underline),
                 ),
               ),
             const Divider(),
