@@ -54,3 +54,6 @@ android/key.properties
 
 # Android local config
 android/local.properties
+
+
+*.zip

@@ -47,10 +47,15 @@ class HomeScreen extends GetView<HomeController> {
               slivers: [
                 SliverAppBar(
                   backgroundColor: Colors.red[50],
+                  toolbarHeight: 52,
+                  // Extra vertical room (was 30px, which squeezed the
+                  // quick-subreddit chips so much they visually clipped)
+                  // plus a touch of top padding so the row doesn't sit
+                  // flush against the title row above it.
                   bottom: PreferredSize(
-                    preferredSize: const Size(0, 30),
+                    preferredSize: const Size(0, 44),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      padding: const EdgeInsets.fromLTRB(4, 6, 4, 8),
                       child: SingleChildScrollView(
                         controller: controller.quickOptionScrollController,
                         scrollDirection: Axis.horizontal,
@@ -60,7 +65,8 @@ class HomeScreen extends GetView<HomeController> {
                             children: List.generate(
                               controller.quickOptions.length,
                               (index) => QuickButton(
-                                isSelected: index == 0,
+                                isSelected: controller.quickOptions[index] ==
+                                    controller.currentSubreddit.value,
                                 title:
                                     controller.quickOptions.toList()[index],
                                 onPressed: controller.updateSubreddit,
@@ -72,19 +78,25 @@ class HomeScreen extends GetView<HomeController> {
                     ),
                   ),
                   floating: true,
-                  leading: InkWell(
-                    onTap: () {
-                      controller.scaffoldKey.currentState!.openDrawer();
-                    },
-                    child: ClipRRect(
+                  leadingWidth: 44,
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(4),
-                      child: Image.asset(
-                        AssetPaths.img.logo,
-                        height: 32,
-                        fit: BoxFit.contain,
+                      onTap: () {
+                        controller.scaffoldKey.currentState!.openDrawer();
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.asset(
+                          AssetPaths.img.logo,
+                          height: 28,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
+                  titleSpacing: 4,
                   title: Obx(
                     () => Text(
                       controller.feedTitle,
@@ -92,18 +104,31 @@ class HomeScreen extends GetView<HomeController> {
                       style: const TextStyle(
                         color: Colors.black87,
                         fontWeight: FontWeight.w700,
+                        fontSize: 17,
                       ),
                     ),
                   ),
+                  // Sort + search used to be crammed right up against
+                  // each other with a fixed 16px trailing gap. Giving
+                  // each its own tappable padding (and a hairline
+                  // divider between them) makes the cluster read as
+                  // two distinct actions instead of one dense blob.
                   actions: [
                     _buildSortButton(),
+                    Container(
+                      height: 20,
+                      width: 1,
+                      color: Colors.black12,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
                     IconButton(
                       onPressed: () {
                         Get.toNamed(AllRoutes.searchScreen);
                       },
                       icon: const Icon(Icons.search),
+                      tooltip: 'Search',
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
                   ],
                 ),
                 Obx(() {
@@ -153,15 +178,17 @@ class HomeScreen extends GetView<HomeController> {
                           return _buildFooter();
                         }
                         final post = controller.posts[index];
-                        return Obx(
-                          () => PostField(
-                            key: Key(post.id),
-                            post: post,
-                            safeContentOnly:
-                                controller.isSafeContentOnly.value,
-                            imageQuality: controller.imageQuality.value,
-                            postUrlPressed: () =>
-                                controller.postLinkClicked(post.url),
+                        return RepaintBoundary(
+                          key: Key(post.id),
+                          child: Obx(
+                            () => PostField(
+                              post: post,
+                              safeContentOnly:
+                                  controller.isSafeContentOnly.value,
+                              imageQuality: controller.imageQuality.value,
+                              postUrlPressed: () =>
+                                  controller.postLinkClicked(post.url),
+                            ),
                           ),
                         );
                       },
@@ -267,13 +294,14 @@ class QuickButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 3.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: isSelected ? Colors.white : Colors.red[300],
           foregroundColor: isSelected ? Colors.red[300] : Colors.white,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
             side: isSelected
                 ? BorderSide(
                     color: Colors.red[300]!,
@@ -281,11 +309,15 @@ class QuickButton extends StatelessWidget {
                   )
                 : BorderSide.none,
           ),
-          minimumSize: const Size(48, 0),
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          minimumSize: const Size(48, 32),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         ),
         onPressed: () => onPressed(title),
-        child: Text(title),
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }

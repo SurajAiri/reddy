@@ -73,6 +73,8 @@ class Utility {
         return 'relevance';
       case RedditSortType.rising:
         return encodeRedditSortType(RedditSortType.new_);
+      case RedditSortType.controversial:
+        return encodeRedditSortType(RedditSortType.top);
       default:
         return encodeRedditSortType(sort);
     }

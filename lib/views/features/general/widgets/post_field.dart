@@ -342,11 +342,18 @@ class _AuthorAvatarState extends State<_AuthorAvatar> {
   @override
   Widget build(BuildContext context) {
     final iconUrl = _user?.iconImg;
+    final dpr = MediaQuery.of(context).devicePixelRatio;
+    final pixelSize =
+        (40 * dpr).round().clamp(1, 512); // 20px radius = 40px diameter
     return CircleAvatar(
       radius: 20,
       backgroundColor: Colors.grey[200],
       backgroundImage: iconUrl != null && iconUrl.isNotEmpty
-          ? CachedNetworkImageProvider(iconUrl)
+          ? CachedNetworkImageProvider(
+              iconUrl,
+              maxWidth: pixelSize,
+              maxHeight: pixelSize,
+            )
           : NetworkImage(kDemoImgUrl) as ImageProvider,
     );
   }
@@ -370,10 +377,18 @@ class _NetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Decoding at full source resolution when the widget only ever
+    // displays at `width x height` logical pixels wastes a lot of
+    // memory (a 4000x3000 source decoded for a 400px-wide card is
+    // ~10x more pixels than will ever be shown) and is a common
+    // cause of scroll jank / OOM in long image-heavy feeds.
+    final dpr = MediaQuery.of(context).devicePixelRatio;
     return CachedNetworkImage(
       imageUrl: url,
       width: width,
       height: height,
+      memCacheWidth: (width * dpr).round().clamp(1, 4096),
+      memCacheHeight: (height * dpr).round().clamp(1, 4096),
       fit: BoxFit.fill,
       fadeInDuration: const Duration(milliseconds: 150),
       placeholder: (context, url) => SizedBox(

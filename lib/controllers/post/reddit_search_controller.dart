@@ -38,6 +38,14 @@ class RedditSearchController extends GetxController {
   RxBool suggestSFW = true.obs;
   Rx<SearchMode> currentSearchMode = SearchMode.local.obs;
 
+  /// Mirrors whether the search text currently starts with `r/`.
+  /// Kept in sync in both directions:
+  ///  - typing `r/` (or removing it) updates this toggle automatically.
+  ///  - tapping the toggle adds/removes the `r/` prefix from the text.
+  /// Starts `false`, matching the blank search field.
+  RxBool isSubredditToggle = false.obs;
+  bool _isSyncingSubredditPrefix = false;
+
   // API settings
   Rx<SubrankingType> selectedType = SubrankingType.largest.obs;
   Rx<SubrankingCategory> selectedCategory = SubrankingCategory.sfw.obs;
@@ -59,6 +67,7 @@ class RedditSearchController extends GetxController {
 
     searchController.addListener(() {
       searchTextLength.value = searchController.text.length;
+      _syncSubredditToggleFromText();
       _updateSuggestions();
     });
   }
@@ -105,6 +114,46 @@ class RedditSearchController extends GetxController {
 
   String _extractSubredditName(String text) =>
       text.substring(2).replaceAll(RegExp(r'\s+'), '');
+
+  /// Keeps [isSubredditToggle] reflecting the text field, e.g. if the
+  /// user types `r/` themselves the toggle flips on, and if they
+  /// backspace it away the toggle flips back off. Skipped while
+  /// [toggleSubredditPrefix] is itself editing the text, so the two
+  /// don't fight each other / recurse.
+  void _syncSubredditToggleFromText() {
+    if (_isSyncingSubredditPrefix) return;
+    final matchesPrefix = _isSubredditQuery(searchController.text);
+    if (isSubredditToggle.value != matchesPrefix) {
+      isSubredditToggle.value = matchesPrefix;
+    }
+  }
+
+  /// Flips the r/ toggle and adds/removes the `r/` prefix on the
+  /// search text to match, so the user never has to type it
+  /// themselves (though they still can, which flips the toggle on
+  /// automatically via [_syncSubredditToggleFromText]).
+  void toggleSubredditPrefix() {
+    final turningOn = !isSubredditToggle.value;
+    isSubredditToggle.value = turningOn;
+
+    final text = searchController.text;
+    final hasPrefix = _isSubredditQuery(text);
+    if (turningOn == hasPrefix) return;
+
+    final selectionEnd = searchController.selection.end;
+    final selectionValid = selectionEnd >= 0 && selectionEnd <= text.length;
+    final cursorFromEnd = selectionValid ? text.length - selectionEnd : 0;
+
+    _isSyncingSubredditPrefix = true;
+    final newText = turningOn ? 'r/$text' : text.substring(2);
+    searchController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(
+        offset: (newText.length - cursorFromEnd).clamp(0, newText.length),
+      ),
+    );
+    _isSyncingSubredditPrefix = false;
+  }
 
   Future<void> _navigateToSubreddit(String subredditName) async {
     isValidating.value = true;

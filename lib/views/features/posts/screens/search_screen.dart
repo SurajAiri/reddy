@@ -35,23 +35,10 @@ class SearchScreen extends GetView<RedditSearchController> {
                     ),
                   )
                 : null,
-            prefixIcon: controller.settingController.isPremium.value &&
-                    !controller.settingController.isSafeContentOnly.value
-                ? IconButton(
-                    icon: Obx(
-                      () => Icon(
-                        Icons.health_and_safety_outlined,
-                        color: controller.suggestSFW.value
-                            ? Colors.black87
-                            : Colors.red[400],
-                      ),
-                    ),
-                    onPressed: controller.toggleSuggestSFW,
-                  )
-                : const Icon(
-                    Icons.search,
-                    color: Colors.black87,
-                  ),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: Colors.black87,
+            ),
           ),
         ),
         actions: [
@@ -98,6 +85,7 @@ class SearchScreen extends GetView<RedditSearchController> {
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ),
+                  _buildSearchOptionsRow(),
                   _buildSearchModeSelector(),
                   if (controller.isApiMode) _buildApiControls(),
                   Expanded(
@@ -107,6 +95,44 @@ class SearchScreen extends GetView<RedditSearchController> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+
+  /// Row of small toggles below the search field:
+  ///  - `r/` toggle: turns the search into a subreddit-jump query
+  ///    without the user having to type `r/` themselves (they still
+  ///    can - the toggle just mirrors whatever's in the field).
+  ///  - SFW/NSFW toggle: previously a prefix icon crammed inside the
+  ///    search field itself; moved down here so the field stays
+  ///    focused on just being a text input.
+  Widget _buildSearchOptionsRow() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      child: Row(
+        children: [
+          Obx(
+            () => _OptionToggleChip(
+              icon: Icons.forum_outlined,
+              label: 'r/',
+              selected: controller.isSubredditToggle.value,
+              onTap: controller.toggleSubredditPrefix,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Obx(
+            () => controller.settingController.isPremium.value &&
+                    !controller.settingController.isSafeContentOnly.value
+                ? _OptionToggleChip(
+                    icon: Icons.health_and_safety_outlined,
+                    label: controller.suggestSFW.value ? 'SFW' : 'NSFW',
+                    selected: !controller.suggestSFW.value,
+                    selectedColor: Colors.red[400]!,
+                    onTap: controller.toggleSuggestSFW,
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
@@ -493,5 +519,53 @@ class SearchScreen extends GetView<RedditSearchController> {
       return '${(count / 1000).toStringAsFixed(1)}K';
     }
     return count.toString();
+  }
+}
+
+class _OptionToggleChip extends StatelessWidget {
+  const _OptionToggleChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.selectedColor = Colors.blue,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color selectedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = selected ? Colors.white : Colors.black54;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? selectedColor : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+          border: selected ? null : Border.all(color: Colors.grey[300]!),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: fg),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: fg,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -40,6 +40,26 @@
 - Consider adding refresh-token style silent re-auth (headless WebView ping) before a session fully expires, instead of only reacting to 401s.
 - Gallery carousel currently always loads the full-resolution image per item; could add per-image quality-tier selection like single-image posts already have.
 
+## Round 2: app bar spacing, search consistency, r/ toggle, image memory
+
+### App bar felt congested
+- The quick-subreddit chip row was pinned to a fixed 30px `PreferredSize`, which squeezed/clipped the chips. Bumped it to 44px with proper padding, gave the leading logo/title/sort/search cluster more breathing room (added a hairline divider between sort and search), and restyled the chips with more generous padding and rounded corners.
+- Fixed a latent bug where the "selected" quick-subreddit chip was determined by `index == 0` instead of actually comparing against the current subreddit — harmless in the common case (since switching subreddits always moves it to index 0) but wrong in principle and now compares against `currentSubreddit` directly.
+
+### Search results looking different from reddit.com
+Two real bugs found in how search requests were built:
+1. **Sort default mismatch.** Search reused whatever sort was last used while browsing a subreddit (`HomeController.currentSort`, defaulting to "New"), but reddit.com's own search defaults to "Relevance". `HomeController` now tracks subreddit-browsing sort and search sort separately (`_subredditSort` / `_searchSort`), with search defaulting to `best` (→ `relevance`), matching reddit.com.
+2. **Invalid sort value sent to `/search.json`.** `RedditSortType.controversial` fell through to the `default` case in `encodeRedditSortTypeForSearch` and was sent verbatim — reddit's search endpoint doesn't accept `controversial` at all (only `relevance|hot|top|new|comments`). Now mapped to `top`, matching the pattern already used for `best`/`rising`.
+
+### r/ toggle + NSFW toggle moved below the search bar
+- Added `RedditSearchController.isSubredditToggle`, kept in sync bidirectionally with the `r/` prefix in the search text: typing `r/` yourself flips the toggle on, deleting it flips it back off; tapping the toggle adds/removes the prefix for you (cursor position preserved). Defaults to `false` on a blank field.
+- The SFW/NSFW suggestion toggle (previously a `prefixIcon` crammed inside the search `TextFormField` itself) moved to a small chip row underneath the search bar, alongside the new r/ toggle.
+
+### Image memory / scroll performance
+- `CachedNetworkImage` (post images, gallery images) and `CachedNetworkImageProvider` (author avatars) now set `memCacheWidth`/`memCacheHeight` (or `maxWidth`/`maxHeight`) based on the actual on-screen size × device pixel ratio, instead of decoding every source image at full resolution into memory. A 4000×3000 source image shown in a 400px-wide card was previously decoded at ~10x more pixels than ever get displayed — a common cause of memory pressure and jank in image-heavy feeds.
+- Each feed item in `SliverList.builder` is now wrapped in a `RepaintBoundary`, so scrolling doesn't force every post card (shadowed container, image, markdown body) to repaint together.
+
+
 ## New: site-wide reddit search + sort-by (Best/Hot/New/Top/Rising)
 
 - **Search box now understands two kinds of input:**

@@ -32,8 +32,21 @@ class HomeController extends GetxController {
   RxBool isSearchMode = false.obs;
   RxString currentQuery = ''.obs;
 
+  /// Sort applied while browsing a subreddit listing.
+  final Rx<RedditSortType> _subredditSort = RedditSortType.new_.obs;
+
+  /// Sort applied to a site-wide search. Defaults to `best` (mapped to
+  /// `relevance` for `/search.json`) since that's what reddit.com's
+  /// own search defaults to - previously this shared a single sort
+  /// value with subreddit browsing, so if you'd last been browsing
+  /// with e.g. "New" selected, a fresh search would silently come
+  /// back sorted by New too instead of by relevance, which is a big
+  /// part of why results looked so different from reddit.com itself.
+  final Rx<RedditSortType> _searchSort = RedditSortType.best.obs;
+
   /// Sort applied to whichever feed is active (subreddit or search).
-  Rx<RedditSortType> currentSort = RedditSortType.new_.obs;
+  Rx<RedditSortType> get currentSort =>
+      isSearchMode.value ? _searchSort : _subredditSort;
 
   /// What the app bar / empty-state should show for the active feed.
   String get feedTitle =>
@@ -126,8 +139,9 @@ class HomeController extends GetxController {
 
   /// Re-fetches the active feed (subreddit or search) with a new sort.
   void changeSort(RedditSortType sort) {
-    if (sort == currentSort.value) return;
-    currentSort.value = sort;
+    final activeSort = currentSort;
+    if (sort == activeSort.value) return;
+    activeSort.value = sort;
     _fetchPosts(reset: true);
   }
 
